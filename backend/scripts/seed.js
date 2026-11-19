@@ -1,0 +1,282 @@
+import { connectDB, disconnectDB } from '../src/config/db.js';
+import { Category } from '../src/models/Category.js';
+import { Product } from '../src/models/Product.js';
+import { slugify } from '../src/utils/slugify.js';
+
+const img = (id, width = 800) =>
+  `https://images.unsplash.com/photo-${id}?w=${width}&q=80&auto=format&fit=crop`;
+
+const categories = [
+  { name: 'Smartphones', slug: 'smartphones', image: img('1511707171634-5f897ff02aa9', 300) },
+  { name: 'Tablets', slug: 'tablets', image: img('1561154464-82e9adf32764', 300) },
+  { name: 'Laptops & Desktops', slug: 'laptops', image: img('1496181133206-80ce9b88a853', 300) },
+  { name: 'Smart Watches', slug: 'smart-watches', image: img('1523275335684-37898b6baf30', 300) },
+  { name: 'Cameras', slug: 'cameras', image: img('1502920917128-1aa500764cbd', 300) },
+  { name: 'Headphones & Buds', slug: 'headphones-buds', image: img('1606220945770-b5b6c2c55bf1', 300) },
+  { name: 'Speakers', slug: 'speakers', image: img('1608043152269-423dbba4e7e1', 300) },
+  { name: 'Gaming', slug: 'gaming', image: img('1592840496694-26d035b52b48', 300) },
+  { name: 'Accessories', slug: 'accessories', image: img('1518770660439-4636190af475', 300) },
+];
+
+const products = [
+  {
+    name: 'Galaxy Note 20 Ultra 5G',
+    category: 'smartphones',
+    brand: 'Samsung',
+    price: 2780,
+    stock: 52,
+    colors: ['Mystic Black', 'Mystic Bronze', 'Mystic White'],
+    sizes: ['128GB', '256GB', '512GB'],
+    rating: { average: 4.8, count: 56 },
+    isFeatured: true,
+    images: [img('1511707171634-5f897ff02aa9'), img('1592750475338-74b7b21085ab'), img('1565849904461-04a58ad377e0')],
+    description: 'A premium 5G flagship with a 120 Hz dynamic AMOLED display, 108 MP camera and built-in S Pen. Built for people who want a desktop-class phone in their pocket.',
+  },
+  {
+    name: 'Galaxy S24 Ultra',
+    category: 'smartphones',
+    brand: 'Samsung',
+    price: 1420,
+    stock: 19,
+    colors: ['Titanium Gray', 'Titanium Black', 'Titanium Violet'],
+    sizes: ['256GB', '512GB'],
+    rating: { average: 4.7, count: 89 },
+    isFeatured: true,
+    images: [img('1592899677977-9c10ca588bbd'), img('1511707171634-5f897ff02aa9')],
+    description: 'Galaxy AI meets a titanium frame and a 200 MP camera. The S24 Ultra is built for creators who want pro-grade results without carrying a bag of lenses.',
+  },
+  {
+    name: 'Samsung S21 Ultra',
+    category: 'smartphones',
+    brand: 'Samsung',
+    price: 2580,
+    compareAtPrice: 2780,
+    stock: 24,
+    colors: ['Phantom Black', 'Silver'],
+    sizes: ['128GB', '256GB'],
+    rating: { average: 4.9, count: 212 },
+    isFeatured: true,
+    images: [img('1565849904461-04a58ad377e0'), img('1592750475338-74b7b21085ab')],
+    description: 'The original camera monster: 108 MP main sensor, 100x space zoom and a stunning quad-HD+ display. Still one of the most capable Android phones ever made.',
+  },
+  {
+    name: 'Samsung Galaxy Note 20',
+    category: 'smartphones',
+    brand: 'Samsung',
+    price: 2780,
+    stock: 67,
+    colors: ['Mystic Gray', 'Mystic Green'],
+    sizes: ['128GB', '256GB'],
+    rating: { average: 4.8, count: 98 },
+    images: [img('1592750475338-74b7b21085ab'), img('1511707171634-5f897ff02aa9')],
+    description: 'A compact flagship with the iconic S Pen, a 60 Hz adaptive display and all-day battery. Perfect for notes, sketches and getting things done on the move.',
+  },
+  {
+    name: 'iPad 10th Generation',
+    category: 'tablets',
+    brand: 'Apple',
+    price: 1780,
+    compareAtPrice: 1980,
+    stock: 32,
+    colors: ['Silver', 'Blue', 'Pink', 'Yellow'],
+    sizes: ['64GB', '256GB'],
+    rating: { average: 4.9, count: 124 },
+    isFeatured: true,
+    images: [img('1561154464-82e9adf32764'), img('1545454675-3531b543be5d')],
+    description: 'A beautiful 10.9-inch Liquid Retina display, A14 Bionic chip and USB-C. The iPad that does it all — from sketching to streaming to serious work.',
+  },
+  {
+    name: 'Apple MacBook Pro M3',
+    category: 'laptops',
+    brand: 'Apple',
+    price: 2480,
+    stock: 18,
+    colors: ['Space Gray', 'Silver'],
+    sizes: ['16GB / 512GB', '32GB / 1TB'],
+    rating: { average: 4.9, count: 89 },
+    isFeatured: true,
+    images: [img('1496181133206-80ce9b88a853'), img('1518770660439-4636190af475')],
+    description: 'The M3 chip brings ridiculous performance and all-day battery to a thin aluminium body. A work machine that stays quiet even when you push it hard.',
+  },
+  {
+    name: 'Apple Watch Series 9',
+    category: 'smart-watches',
+    brand: 'Apple',
+    price: 680,
+    stock: 41,
+    colors: ['Midnight', 'Starlight', 'Product Red'],
+    sizes: ['41mm', '45mm'],
+    rating: { average: 4.9, count: 245 },
+    isFeatured: true,
+    images: [img('1523275335684-37898b6baf30'), img('1579586337278-3befd40fd17a')],
+    description: 'Brighter display, faster S9 SiP and a new double-tap gesture. The most advanced Apple Watch yet, with health features that keep you informed all day.',
+  },
+  {
+    name: 'Galaxy Watch 6',
+    category: 'smart-watches',
+    brand: 'Samsung',
+    price: 420,
+    stock: 28,
+    colors: ['Graphite', 'Silver'],
+    sizes: ['40mm', '44mm'],
+    rating: { average: 4.6, count: 74 },
+    images: [img('1579586337278-3befd40fd17a'), img('1523275335684-37898b6baf30')],
+    description: 'A rotating bezel, advanced sleep coaching and a bright AMOLED screen. The Galaxy Watch 6 is a serious fitness companion that still looks great at dinner.',
+  },
+  {
+    name: 'Canon EOS R7 DSLR',
+    category: 'cameras',
+    brand: 'Canon',
+    price: 1920,
+    stock: 24,
+    colors: ['Black'],
+    sizes: ['Body only', 'with 18-55mm lens'],
+    rating: { average: 4.7, count: 67 },
+    isFeatured: true,
+    images: [img('1502920917128-1aa500764cbd'), img('1606983340126-99ab4feaa64a')],
+    description: 'A 32.5 MP APS-C sensor, 15 fps electronic shutter and 4K video in a compact body. Built for wildlife and sports shooters who need speed without bulk.',
+  },
+  {
+    name: 'Hero Camera X-Series',
+    category: 'cameras',
+    brand: 'Sony',
+    price: 1150,
+    stock: 12,
+    colors: ['Black', 'Silver'],
+    sizes: ['Body only', 'Kit'],
+    rating: { average: 4.5, count: 41 },
+    images: [img('1606983340126-99ab4feaa64a'), img('1502920917128-1aa500764cbd')],
+    description: 'A full-frame mirrorless camera with real-time eye autofocus and 10-bit colour. Made for creators who want cinematic footage straight out of camera.',
+  },
+  {
+    name: 'Samsung Gear Camera',
+    category: 'cameras',
+    brand: 'Samsung',
+    price: 890,
+    stock: 34,
+    colors: ['Black'],
+    sizes: ['Standard'],
+    rating: { average: 4.4, count: 36 },
+    images: [img('1606983340126-99ab4feaa64a'), img('1518770660439-4636190af475')],
+    description: 'A compact smart camera with fast sharing and clever scene detection. Point, shoot and send — without missing the moment.',
+  },
+  {
+    name: 'Beats Studio Buds Pro',
+    category: 'headphones-buds',
+    brand: 'Beats',
+    price: 280,
+    stock: 67,
+    colors: ['Black', 'White', 'Orange'],
+    sizes: ['One Size'],
+    rating: { average: 4.7, count: 312 },
+    isFeatured: true,
+    images: [img('1606220945770-b5b6c2c55bf1'), img('1590658268037-6bf12165a8df'), img('1574920162043-b872873f19c8')],
+    description: 'Active noise cancelling, spatial audio and up to 36 hours of listening. Small buds with a big, balanced sound — and a case that fits any pocket.',
+  },
+  {
+    name: 'Apple AirPods V57',
+    category: 'headphones-buds',
+    brand: 'Apple',
+    price: 680,
+    stock: 12,
+    colors: ['White'],
+    sizes: ['One Size'],
+    rating: { average: 4.9, count: 124 },
+    images: [img('1590658268037-6bf12165a8df'), img('1606220945770-b5b6c2c55bf1')],
+    description: 'Seamless pairing, personalised spatial audio and a pocketable charging case. The everyday earbuds that just work with everything in your Apple setup.',
+  },
+  {
+    name: 'Sony WH-1000XM5',
+    category: 'headphones-buds',
+    brand: 'Sony',
+    price: 380,
+    stock: 23,
+    colors: ['Black', 'Silver'],
+    sizes: ['One Size'],
+    rating: { average: 4.8, count: 188 },
+    images: [img('1574920162043-b872873f19c8'), img('1590658268037-6bf12165a8df')],
+    description: 'Industry-leading noise cancelling and a featherlight design. Eight microphones and a dedicated processor make any flight or office feel quiet.',
+  },
+  {
+    name: 'Apple HomePod 2nd Gen',
+    category: 'speakers',
+    brand: 'Apple',
+    price: 280,
+    compareAtPrice: 320,
+    stock: 22,
+    colors: ['White', 'Midnight'],
+    sizes: ['Single', 'Stereo pair'],
+    rating: { average: 4.9, count: 312 },
+    isFeatured: true,
+    images: [img('1608043152269-423dbba4e7e1'), img('1545454675-3531b543be5d'), img('1589003077984-894e133dabab')],
+    description: 'Spatial audio, room-sensing tech and the centrepiece of your Apple ecosystem. Built-in S7 chip, dynamic computational audio and seamless handoff from iPhone.',
+  },
+  {
+    name: 'Power Wired Controller',
+    category: 'gaming',
+    brand: 'Logitech',
+    price: 190,
+    stock: 34,
+    colors: ['Black', 'White'],
+    sizes: ['Standard'],
+    rating: { average: 4.8, count: 78 },
+    images: [img('1592840496694-26d035b52b48'), img('1527814050087-3793815479db')],
+    description: 'A responsive wired controller with customisable buttons and a comfortable grip. Plug in and play with zero input lag.',
+  },
+  {
+    name: 'Gaming Mouse Pro',
+    category: 'gaming',
+    brand: 'Logitech',
+    price: 190,
+    stock: 36,
+    colors: ['Black'],
+    sizes: ['Standard'],
+    rating: { average: 4.6, count: 64 },
+    images: [img('1527814050087-3793815479db'), img('1518770660439-4636190af475')],
+    description: 'A lightweight 26K sensor mouse with customisable RGB lighting and programmable buttons. Built for long sessions and fast flicks.',
+  },
+  {
+    name: 'USB-C Hub 8-in-1',
+    category: 'accessories',
+    brand: 'HP',
+    price: 90,
+    stock: 58,
+    colors: ['Silver', 'Space Gray'],
+    sizes: ['Standard'],
+    rating: { average: 4.5, count: 47 },
+    images: [img('1518770660439-4636190af475'), img('1496181133206-80ce9b88a853')],
+    description: 'Eight ports in one slim adapter: HDMI, USB-C power delivery, USB-A, SD/microSD and Ethernet. Everything your laptop forgot to include.',
+  },
+];
+
+async function seed() {
+  await connectDB();
+
+  await Promise.all([Product.deleteMany({}), Category.deleteMany({})]);
+
+  const insertedCategories = await Category.insertMany(
+    categories.map((category) => ({ ...category, description: `${category.name} from the Sookshop collection.` })),
+  );
+  const categoryBySlug = new Map(
+    insertedCategories.map((category) => [category.slug, category._id]),
+  );
+
+  const insertedProducts = await Product.insertMany(
+    products.map((product) => ({
+      ...product,
+      slug: slugify(product.name),
+      sku: `SOOK-${slugify(product.name).slice(0, 12).toUpperCase()}`,
+      category: categoryBySlug.get(product.category),
+      compareAtPrice: product.compareAtPrice || 0,
+    })),
+  );
+
+  console.log(`Seeded ${insertedCategories.length} categories and ${insertedProducts.length} products.`);
+  await disconnectDB();
+}
+
+seed().catch(async (error) => {
+  console.error('Seed failed:', error.message);
+  await disconnectDB().catch(() => {});
+  process.exitCode = 1;
+});

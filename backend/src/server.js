@@ -14,7 +14,7 @@ async function startServer() {
       console.log(`\n${signal} received — shutting down gracefully...`);
       server.close(async () => {
         await disconnectDB();
-        process.exit(0);
+        process.exitCode = 0;
       });
     };
 

@@ -67,8 +67,9 @@ Every feature is built across all three apps in the same step.
 
 - [x] **Step 1 — Scaffold**: backend API structure/models, React routing/layouts, shared
   config, Axios clients, template design system, COD-first copy.
-- [ ] **Step 2 — Categories & Products**: API CRUD + filters/search/pagination → storefront
-  home/shop/product pages → admin products & categories screens.
+- [x] **Step 2 — Categories & Products**: category/product CRUD + filters/search/pagination →
+  storefront home/shop/product pages → admin products & categories screens. Run `npm run seed`
+  in `backend/` to load 9 categories and 18 products from the template.
 - [ ] **Step 3 — Authentication**: register/login/JWT/roles → storefront account pages →
   protected admin login.
 - [ ] **Step 4 — Cart & Wishlist**: cart API + React cart context → storefront cart and

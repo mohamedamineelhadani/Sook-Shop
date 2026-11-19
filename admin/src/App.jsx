@@ -1,14 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 
 import AdminLayout from './layouts/AdminLayout.jsx';
-import {
-  CategoriesPage,
-  DashboardPage,
-  LoginPage,
-  OrdersPage,
-  ProductsPage,
-  UsersPage,
-} from './pages/AdminPages.jsx';
+import { DashboardPage, LoginPage, OrdersPage, UsersPage } from './pages/AdminPages.jsx';
+import CategoriesPage from './pages/CategoriesPage.jsx';
+import ProductsPage from './pages/ProductsPage.jsx';
 
 export default function App() {
   return (

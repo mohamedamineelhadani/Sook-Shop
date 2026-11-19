@@ -1,5 +1,8 @@
 import { Router } from 'express';
 
+import categoryRoutes from './category.routes.js';
+import productRoutes from './product.routes.js';
+
 const router = Router();
 
 router.get('/health', (req, res) => {
@@ -19,15 +22,19 @@ router.get('/', (req, res) => {
     payment: 'cash on delivery',
     endpoints: {
       health: 'GET /api/health',
-      // Added step by step:
-      // products:   '/api/products'
-      // categories: '/api/categories'
-      // auth:       '/api/auth'
-      // cart:       '/api/cart'
-      // orders:     '/api/orders'
-      // users:      '/api/users'
+      products: '/api/products',
+      brands: 'GET /api/products/brands',
+      categories: '/api/categories',
+      // Added in later steps:
+      // auth:  '/api/auth'
+      // cart:  '/api/cart'
+      // orders:'/api/orders'
+      // users: '/api/users'
     },
   });
 });
+
+router.use('/categories', categoryRoutes);
+router.use('/products', productRoutes);
 
 export default router;

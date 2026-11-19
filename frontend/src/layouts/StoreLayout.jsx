@@ -10,10 +10,10 @@ import {
   SearchIcon,
   UserIcon,
 } from '../components/Icons.jsx';
+import { useCart } from '../hooks/useCart.js';
 import { APP_NAME } from '../config.js';
 
-// These counts become real cart/wishlist state in the Cart & Wishlist steps.
-const CART_COUNT = 0;
+// Wishlist becomes real state in the Wishlist step.
 const WISHLIST_COUNT = 0;
 
 const navLinks = [
@@ -53,6 +53,7 @@ function Brand({ light = false }) {
 
 export default function StoreLayout() {
   const navigate = useNavigate();
+  const { count: cartCount } = useCart();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -122,7 +123,7 @@ export default function StoreLayout() {
             </Link>
             <Link to="/cart" className="icon-btn icon-btn--cart" aria-label="Cart">
               <CartIcon />
-              {CART_COUNT > 0 && <span className="count">{CART_COUNT}</span>}
+              {cartCount > 0 && <span className="count">{cartCount}</span>}
             </Link>
             <button
               className="nav-toggle"

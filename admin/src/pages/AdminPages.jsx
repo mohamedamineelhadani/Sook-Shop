@@ -1,20 +1,35 @@
-import {
-  DollarSign,
-  Package,
-  ShoppingCart,
-  Users,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Package, ShoppingCart, Tags, Users } from 'lucide-react';
 
+import { getCategories, getProducts } from '../api/catalog.js';
 import AdminPlaceholder from '../components/AdminPlaceholder.jsx';
 
-const stats = [
-  { label: 'Revenue (COD)', value: '$0', icon: DollarSign, tone: 'indigo' },
-  { label: 'Orders', value: '0', icon: ShoppingCart, tone: 'green' },
-  { label: 'Products', value: '0', icon: Package, tone: 'amber' },
-  { label: 'Customers', value: '0', icon: Users, tone: 'purple' },
-];
-
 export function DashboardPage() {
+  const [counts, setCounts] = useState({ products: 0, categories: 0 });
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([getProducts({ limit: 1 }), getCategories()])
+      .then(([products, categories]) => {
+        if (!alive) return;
+        setCounts({
+          products: products.pagination?.total || 0,
+          categories: categories.data.length,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const stats = [
+    { label: 'Products', value: counts.products, icon: Package, tone: 'amber' },
+    { label: 'Categories', value: counts.categories, icon: Tags, tone: 'indigo' },
+    { label: 'Orders (COD)', value: 0, icon: ShoppingCart, tone: 'green' },
+    { label: 'Customers', value: 0, icon: Users, tone: 'purple' },
+  ];
+
   return (
     <>
       <div className="admin-page-head">
@@ -41,7 +56,7 @@ export function DashboardPage() {
 
       <AdminPlaceholder
         title="Live dashboard"
-        description="Charts and recent activity are added when the Orders and Products features are built."
+        description="Charts and recent activity are added when the Orders and Customers features are built."
         steps={[
           'Build dashboard summary endpoints in the API',
           'Show recent COD orders and low-stock alerts',
@@ -49,34 +64,6 @@ export function DashboardPage() {
         ]}
       />
     </>
-  );
-}
-
-export function ProductsPage() {
-  return (
-    <AdminPlaceholder
-      title="Product management"
-      description="Create, edit, delete and search products. Stock, prices and images all live here."
-      steps={[
-        'Build the products CRUD API with image and category support',
-        'Create the product table, search and filters in React',
-        'Add the product form with validation and stock tracking',
-      ]}
-    />
-  );
-}
-
-export function CategoriesPage() {
-  return (
-    <AdminPlaceholder
-      title="Category management"
-      description="Organise products into categories and subcategories shown in the shop filters."
-      steps={[
-        'Build the categories CRUD API',
-        'Create the category tree table in React',
-        'Connect categories to the storefront shop filters',
-      ]}
-    />
   );
 }
 
