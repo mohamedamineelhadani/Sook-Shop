@@ -12,8 +12,11 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+
+import { logout } from '../api/auth.js';
 import { APP_NAME } from '../config.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const menu = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -26,6 +29,25 @@ const menu = [
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, setUser } = useAuth();
+
+  const initials = (user?.name || 'Admin')
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Still clear local state if the request fails.
+    }
+    setUser(null);
+    navigate('/login', { replace: true });
+  };
 
   const current =
     menu.find((item) =>
@@ -70,10 +92,10 @@ export default function AdminLayout() {
             <Store size={16} />
             <span>Payments are <strong>cash on delivery</strong></span>
           </div>
-          <Link to="/login" className="admin-nav-link" onClick={() => setSidebarOpen(false)}>
+          <button type="button" className="admin-nav-link" onClick={handleLogout}>
             <LogOut size={18} />
             Log out
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -106,7 +128,9 @@ export default function AdminLayout() {
             <button className="admin-icon-button" aria-label="Notifications">
               <Bell size={18} />
             </button>
-            <div className="admin-avatar" title="Admin">AD</div>
+            <div className="admin-avatar" title={user?.name || 'Admin'}>
+              {initials}
+            </div>
           </div>
         </header>
 

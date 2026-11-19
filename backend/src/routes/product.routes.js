@@ -9,6 +9,7 @@ import {
   updateProduct,
 } from '../controllers/product.controller.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
+import { authorize, protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import {
   createProductValidator,
@@ -17,19 +18,20 @@ import {
 } from '../validators/product.validator.js';
 
 const router = Router();
+const adminOnly = [protect, authorize('admin')];
 
-// Write routes will be protected by admin auth in Step 3.
 router.get('/', asyncHandler(listProducts));
 router.get('/brands', asyncHandler(listBrands));
 router.get('/:slug', asyncHandler(getProduct));
-router.post('/', createProductValidator, validate, asyncHandler(createProduct));
+router.post('/', ...adminOnly, createProductValidator, validate, asyncHandler(createProduct));
 router.put(
   '/:id',
+  ...adminOnly,
   productIdValidator,
   updateProductValidator,
   validate,
   asyncHandler(updateProduct),
 );
-router.delete('/:id', productIdValidator, validate, asyncHandler(deleteProduct));
+router.delete('/:id', ...adminOnly, productIdValidator, validate, asyncHandler(deleteProduct));
 
 export default router;

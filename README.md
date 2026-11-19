@@ -61,6 +61,21 @@ sookshop/
 The `VITE_API_URL` in both React apps defaults to `http://localhost:5000/api`, so `.env`
 files are optional for local development. CORS is configured for ports 5173 and 5174.
 
+### Authentication
+
+- `POST /api/auth/register` — customer sign-up
+- `POST /api/auth/login` — returns a JWT and sets the httpOnly `sookshop_token` cookie
+- `POST /api/auth/logout` — clears the cookie
+- `GET /api/auth/me` — current user (requires login)
+
+The token is also returned in the response body so API clients can send it as
+`Authorization: Bearer <token>`. Customers can register; only admins can create, edit or
+delete products and categories. Create/reset the first admin with:
+
+```bash
+cd backend && npm run seed:admin
+```
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -70,8 +85,10 @@ Every feature is built across all three apps in the same step.
 - [x] **Step 2 — Categories & Products**: category/product CRUD + filters/search/pagination →
   storefront home/shop/product pages → admin products & categories screens. Run `npm run seed`
   in `backend/` to load 9 categories and 18 products from the template.
-- [ ] **Step 3 — Authentication**: register/login/JWT/roles → storefront account pages →
-  protected admin login.
+- [x] **Step 3 — Authentication**: register/login/logout/me with JWT cookies + roles →
+  `protect`/`authorize('admin')` on all catalog write routes → storefront login/register/account
+  with protected routes → admin login with protected panel. Seed the first admin with
+  `npm run seed:admin` in `backend/` (default `admin@sookshop.com` / `Admin@123`).
 - [ ] **Step 4 — Cart & Wishlist**: cart API + React cart context → storefront cart and
   wishlist → admin read-only insight.
 - [ ] **Step 5 — Orders (COD checkout)**: order API with shipping details and COD status →

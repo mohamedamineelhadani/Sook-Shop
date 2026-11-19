@@ -10,8 +10,10 @@ import {
   SearchIcon,
   UserIcon,
 } from '../components/Icons.jsx';
-import { useCart } from '../hooks/useCart.js';
+import { logout } from '../api/auth.js';
 import { APP_NAME } from '../config.js';
+import { useAuth } from '../hooks/useAuth.js';
+import { useCart } from '../hooks/useCart.js';
 
 // Wishlist becomes real state in the Wishlist step.
 const WISHLIST_COUNT = 0;
@@ -53,9 +55,32 @@ function Brand({ light = false }) {
 
 export default function StoreLayout() {
   const navigate = useNavigate();
+  const { user, setUser } = useAuth();
   const { count: cartCount } = useCart();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const accountHref = user ? '/account' : '/login';
+  const accountLabel = user ? `My account (${user.name})` : 'Account';
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Still clear local state if the request fails.
+    }
+    setUser(null);
+    setDrawerOpen(false);
+    navigate('/');
+  };
+
+  const footerHref = (label) => {
+    if (label === 'Contact') return '/contact';
+    if (label === 'My account') return user ? '/account' : '/login';
+    if (label === 'Login / Register') return '/login';
+    if (label === 'My order') return '/orders';
+    return '/shop';
+  };
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : '';
@@ -89,6 +114,7 @@ export default function StoreLayout() {
             Cash on delivery available on every order
           </span>
           <span className="links">
+            {user && <span className="utility-user">Hi, {user.name.split(' ')[0]}</span>}
             <Link to="/contact">Track order</Link>
             <Link to="/contact">Help</Link>
             <span>EN · USD</span>
@@ -114,7 +140,7 @@ export default function StoreLayout() {
           </form>
 
           <div className="icon-row">
-            <Link to="/login" className="icon-btn" aria-label="Account">
+            <Link to={accountHref} className="icon-btn" aria-label={accountLabel} title={accountLabel}>
               <UserIcon />
             </Link>
             <Link to="/wishlist" className="icon-btn" aria-label="Wishlist">
@@ -176,6 +202,22 @@ export default function StoreLayout() {
             {link.label}
           </Link>
         ))}
+        <div className="drawer-auth">
+          {user ? (
+            <>
+              <Link to="/account" onClick={() => setDrawerOpen(false)}>
+                My account · {user.name}
+              </Link>
+              <button type="button" onClick={handleLogout}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link to="/login" onClick={() => setDrawerOpen(false)}>
+              Login / Register
+            </Link>
+          )}
+        </div>
         <Link
           to="/cart"
           className="btn btn--indigo"
@@ -223,19 +265,7 @@ export default function StoreLayout() {
                 <ul>
                   {column.links.map((label) => (
                     <li key={label}>
-                      <Link
-                        to={
-                          label === 'Contact'
-                            ? '/contact'
-                            : label === 'My account' || label === 'Login / Register'
-                              ? '/login'
-                              : label === 'My order'
-                                ? '/orders'
-                                : '/shop'
-                        }
-                      >
-                        {label}
-                      </Link>
+                      <Link to={footerHref(label)}>{label}</Link>
                     </li>
                   ))}
                 </ul>

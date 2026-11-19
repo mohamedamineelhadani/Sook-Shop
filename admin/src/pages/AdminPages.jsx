@@ -87,23 +87,9 @@ export function UsersPage() {
       title="Customer management"
       description="View registered customers and their order history. Admin accounts are managed here too."
       steps={[
-        'Build authentication and role-based access in the API',
-        'Create the customers table in React',
-        'Protect admin routes for admin accounts only',
-      ]}
-    />
-  );
-}
-
-export function LoginPage() {
-  return (
-    <AdminPlaceholder
-      title="Admin login"
-      description="A secure login form will protect this panel in the Authentication step."
-      steps={[
-        'Build login, logout and JWT refresh endpoints',
-        'Create the React login form and protected routes',
-        'Seed the first admin account',
+        'Create the customers table with order history',
+        'Add account status controls',
+        'Show live customer counts on the dashboard',
       ]}
     />
   );

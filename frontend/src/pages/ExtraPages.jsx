@@ -1,19 +1,5 @@
 import PlaceholderPage from '../components/PlaceholderPage.jsx';
 
-export function LoginPage() {
-  return (
-    <PlaceholderPage
-      title="Login / Register"
-      subtitle="Customer accounts arrive with the Authentication step."
-      steps={[
-        'Build register, login, logout and protected routes in the API',
-        'Create the React login and register forms',
-        'Connect saved carts, wishlists and order history to the account',
-      ]}
-    />
-  );
-}
-
 export function WishlistPage() {
   return (
     <PlaceholderPage

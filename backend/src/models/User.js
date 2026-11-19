@@ -26,6 +26,7 @@ const userSchema = new Schema(
     address: { type: addressSchema, default: () => ({}) },
     wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: null },
   },
   { timestamps: true },
 );

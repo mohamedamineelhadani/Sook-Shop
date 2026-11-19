@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import authRoutes from './auth.routes.js';
 import categoryRoutes from './category.routes.js';
 import productRoutes from './product.routes.js';
 
@@ -25,8 +26,8 @@ router.get('/', (req, res) => {
       products: '/api/products',
       brands: 'GET /api/products/brands',
       categories: '/api/categories',
+      auth: '/api/auth',
       // Added in later steps:
-      // auth:  '/api/auth'
       // cart:  '/api/cart'
       // orders:'/api/orders'
       // users: '/api/users'
@@ -34,6 +35,7 @@ router.get('/', (req, res) => {
   });
 });
 
+router.use('/auth', authRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/products', productRoutes);
 
