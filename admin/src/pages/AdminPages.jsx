@@ -1,52 +1,101 @@
 import { useEffect, useState } from 'react';
-import { Eye, Package, RefreshCw, Search, ShoppingCart, Tags, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  DollarSign,
+  Eye,
+  Package,
+  RefreshCw,
+  Search,
+  ShoppingCart,
+  Star,
+  Tags,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-import { getCartInsights } from '../api/insights.js';
+import { getDashboard } from '../api/dashboard.js';
 import {
   getAdminOrders,
   getOrder,
   getOrderStats,
   updateOrderStatus,
 } from '../api/orders.js';
-import { getCategories, getProducts } from '../api/catalog.js';
 import AdminPlaceholder from '../components/AdminPlaceholder.jsx';
 import Modal from '../components/Modal.jsx';
 import { formatDate, formatPrice, imageUrl } from '../lib/format.js';
 import { ORDER_STATUSES, statusBadge, statusLabel } from '../lib/orders.js';
 
 export function DashboardPage() {
-  const [counts, setCounts] = useState({
-    products: 0,
-    categories: 0,
-    carts: 0,
-    customers: 0,
-    orders: 0,
-  });
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let alive = true;
-    Promise.all([getProducts({ limit: 1 }), getCategories(), getCartInsights(), getOrderStats()])
-      .then(([products, categories, insights, orderStats]) => {
+    getDashboard()
+      .then((dashboard) => {
         if (!alive) return;
-        setCounts({
-          products: products.pagination?.total || 0,
-          categories: categories.data.length,
-          carts: insights.stats.carts,
-          customers: insights.stats.customers,
-          orders: orderStats.total,
-        });
+        setData(dashboard);
+        setError('');
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!alive) return;
+        setError(err.message || 'Could not load the dashboard.');
+        setLoading(false);
+      });
     return () => {
       alive = false;
     };
   }, []);
 
-  const stats = [
-    { label: 'Products', value: counts.products, icon: Package, tone: 'amber' },
-    { label: 'Categories', value: counts.categories, icon: Tags, tone: 'indigo' },
-    { label: 'Orders (COD)', value: counts.orders, icon: ShoppingCart, tone: 'green' },
-    { label: 'Customers', value: counts.customers, icon: Users, tone: 'purple' },
+  const refresh = () => {
+    setLoading(true);
+    getDashboard()
+      .then((dashboard) => {
+        setData(dashboard);
+        setError('');
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || 'Could not load the dashboard.');
+        setLoading(false);
+      });
+  };
+
+  if (loading && !data) return <div className="admin-loading">Loading dashboard…</div>;
+
+  const stats = data?.stats || {};
+  const daily = data?.daily || [];
+  const byStatus = data?.byStatus || {};
+  const reviewData = data?.reviews || { average: 0, distribution: {} };
+  const recentOrders = data?.recentOrders || [];
+  const lowStock = data?.lowStock || [];
+  const topProducts = data?.topProducts || [];
+  const maxOrders = Math.max(1, ...daily.map((day) => day.orders));
+  const weekOrders = daily.reduce((sum, day) => sum + day.orders, 0);
+  const weekRevenue = daily.reduce((sum, day) => sum + day.revenue, 0);
+  const statusTotal = ORDER_STATUSES.reduce((sum, status) => sum + (byStatus[status] || 0), 0);
+  const reviewTotal = Object.values(reviewData.distribution || {}).reduce(
+    (sum, count) => sum + count,
+    0,
+  );
+
+  const statCards = [
+    { label: 'Products', value: stats.products || 0, icon: Package, tone: 'amber' },
+    { label: 'Categories', value: stats.categories || 0, icon: Tags, tone: 'indigo' },
+    { label: 'Customers', value: stats.customers || 0, icon: Users, tone: 'purple' },
+    { label: 'COD orders', value: stats.orders || 0, icon: ShoppingCart, tone: 'green' },
+    { label: 'Order value', value: formatPrice(stats.revenue || 0), icon: DollarSign, tone: 'indigo' },
+    {
+      label: 'Cash collected',
+      value: formatPrice(stats.collected || 0),
+      icon: Wallet,
+      tone: 'green',
+    },
+    { label: 'Average rating', value: `${reviewData.average || 0}/5`, icon: Star, tone: 'amber' },
+    { label: 'Low stock', value: stats.lowStock || 0, icon: AlertTriangle, tone: 'purple' },
   ];
 
   return (
@@ -54,13 +103,25 @@ export function DashboardPage() {
       <div className="admin-page-head">
         <div>
           <h2>Store overview</h2>
-          <p>Live numbers from your store, updated every time this page opens.</p>
+          <p>Live numbers from your store, refreshed directly from MongoDB.</p>
         </div>
-        <span className="admin-pill">Cash on delivery only</span>
+        <div className="admin-dashboard-actions">
+          <span className="admin-pill">Cash on delivery only</span>
+          <button
+            type="button"
+            className="admin-button admin-button--ghost"
+            onClick={refresh}
+            disabled={loading}
+          >
+            <RefreshCw size={14} className={loading ? 'is-spinning' : ''} /> Refresh
+          </button>
+        </div>
       </div>
 
+      {error && <div className="admin-form-error">{error}</div>}
+
       <div className="admin-stats">
-        {stats.map(({ label, value, icon: Icon, tone }) => (
+        {statCards.map(({ label, value, icon: Icon, tone }) => (
           <div className="admin-stat" key={label}>
             <span className={`admin-stat-icon tone-${tone}`}>
               <Icon size={19} />
@@ -73,15 +134,204 @@ export function DashboardPage() {
         ))}
       </div>
 
-      <AdminPlaceholder
-        title="Live dashboard"
-        description="Charts and low-stock alerts are added in the final polish step."
-        steps={[
-          'Build dashboard summary endpoints in the API',
-          'Show recent COD orders and low-stock alerts',
-          'Add charts with real data from MongoDB',
-        ]}
-      />
+      <div className="admin-dashboard-grid">
+        <section className="admin-card admin-panel admin-panel--wide">
+          <div className="admin-panel-head">
+            <h3>
+              <ShoppingCart size={15} /> Orders &amp; revenue
+            </h3>
+            <span>
+              {weekOrders} orders · {formatPrice(weekRevenue)} · last 7 days
+            </span>
+          </div>
+          <div className="admin-chart" role="img" aria-label="Orders placed per day, last 7 days">
+            {daily.map((day) => (
+              <div className="admin-chart-col" key={day.date}>
+                <div className="admin-chart-track">
+                  <span className="admin-chart-value">{day.orders}</span>
+                  <span
+                    className="admin-chart-bar"
+                    style={{ height: `${Math.max(3, (day.orders / maxOrders) * 100)}%` }}
+                    title={`${day.label}: ${day.orders} order(s), ${formatPrice(day.revenue)} revenue`}
+                  />
+                </div>
+                <span className="admin-chart-label">{day.label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="admin-chart-legend">
+            <span className="admin-legend-dot" /> Orders placed · cancelled orders excluded from
+            revenue
+          </div>
+        </section>
+
+        <section className="admin-card admin-panel">
+          <div className="admin-panel-head">
+            <h3>
+              <ShoppingCart size={15} /> Order status
+            </h3>
+            <span>{statusTotal} total</span>
+          </div>
+          <div className="admin-breakdown">
+            {ORDER_STATUSES.map((status) => {
+              const count = byStatus[status] || 0;
+              const tone =
+                status === 'cancelled'
+                  ? 'is-rose'
+                  : status === 'shipped' || status === 'delivered'
+                    ? 'is-green'
+                    : '';
+              return (
+                <div className="admin-breakdown-row" key={status}>
+                  <span>{statusLabel(status)}</span>
+                  <span className={`admin-progress ${tone}`}>
+                    <span style={{ width: `${(count / (statusTotal || 1)) * 100}%` }} />
+                  </span>
+                  <b>{count}</b>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="admin-card admin-panel">
+          <div className="admin-panel-head">
+            <h3>
+              <Star size={15} /> Customer reviews
+            </h3>
+            <span>
+              {reviewTotal} total · {stats.hiddenReviews || 0} hidden
+            </span>
+          </div>
+          <div className="admin-rating-summary">
+            <strong>{reviewData.average || 0}</strong>
+            <div>
+              <span className="admin-review-stars">★★★★★</span>
+              <small>Average rating out of 5</small>
+            </div>
+          </div>
+          <div className="admin-breakdown">
+            {[5, 4, 3, 2, 1].map((rating) => {
+              const count = reviewData.distribution?.[rating] || 0;
+              return (
+                <div className="admin-breakdown-row" key={rating}>
+                  <span>{rating} ★</span>
+                  <span className="admin-progress is-amber">
+                    <span style={{ width: `${(count / (reviewTotal || 1)) * 100}%` }} />
+                  </span>
+                  <b>{count}</b>
+                </div>
+              );
+            })}
+          </div>
+          <Link to="/reviews" className="admin-link">
+            Moderate reviews →
+          </Link>
+        </section>
+
+        <section className="admin-card admin-panel admin-panel--wide">
+          <div className="admin-panel-head">
+            <h3>
+              <Eye size={15} /> Recent COD orders
+            </h3>
+            <Link to="/orders" className="admin-link">
+              View all orders →
+            </Link>
+          </div>
+          {recentOrders.length ? (
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Placed</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td>
+                        <span className="admin-order-number">
+                          {order.orderNumber || order.id}
+                        </span>
+                      </td>
+                      <td>{order.customer}</td>
+                      <td>{formatDate(order.placedAt)}</td>
+                      <td>{order.itemCount}</td>
+                      <td>{formatPrice(order.total)}</td>
+                      <td>
+                        <span className={`admin-badge ${statusBadge(order.status)}`}>
+                          {statusLabel(order.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="admin-empty">No orders yet. Demo orders can be added with seed:demo.</div>
+          )}
+        </section>
+
+        <section className="admin-card admin-panel">
+          <div className="admin-panel-head">
+            <h3>
+              <AlertTriangle size={15} /> Low stock
+            </h3>
+            <Link to="/products" className="admin-link">
+              Manage stock →
+            </Link>
+          </div>
+          {lowStock.length ? (
+            <div className="admin-mini-list">
+              {lowStock.map((product) => (
+                <div className="admin-mini-row" key={product.id}>
+                  <img src={imageUrl(product.image)} alt="" />
+                  <div className="admin-mini-copy">
+                    <strong>{product.name}</strong>
+                    <span>{formatPrice(product.price)}</span>
+                  </div>
+                  <span className="admin-badge badge-rose">{product.stock} left</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="admin-empty">All active products have healthy stock.</div>
+          )}
+        </section>
+
+        <section className="admin-card admin-panel">
+          <div className="admin-panel-head">
+            <h3>
+              <Package size={15} /> Top sellers
+            </h3>
+            <span>By units sold</span>
+          </div>
+          {topProducts.length ? (
+            <div className="admin-mini-list">
+              {topProducts.map((product, index) => (
+                <div className="admin-mini-row" key={product.id}>
+                  <span className="admin-mini-rank">#{index + 1}</span>
+                  <img src={imageUrl(product.image)} alt="" />
+                  <div className="admin-mini-copy">
+                    <strong>{product.name}</strong>
+                    <span>
+                      {product.sold} sold · {formatPrice(product.revenue)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="admin-empty">Sell an order to see your best products here.</div>
+          )}
+        </section>
+      </div>
     </>
   );
 }

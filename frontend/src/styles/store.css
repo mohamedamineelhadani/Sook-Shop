@@ -1280,8 +1280,22 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 @media (max-width: 760px) {
   :root { --container-pad: 16px; }
-  .site-header .container { grid-template-columns: auto 1fr auto; gap: var(--s4); height: 72px; }
-  .search { display: none; }
+  .site-header .container {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "brand icons"
+      "search search";
+    gap: var(--s3) var(--s4);
+    height: auto;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .brand { grid-area: brand; }
+  .icon-row { grid-area: icons; justify-self: end; }
+  .search { display: block; grid-area: search; max-width: none; margin: 0; }
+  .search input { padding-top: 11px; padding-bottom: 11px; font-size: 16px; }
+  .search-suggest { max-height: 300px; }
+  .nav-bar { top: 126px; }
   .nav-bar .container { gap: var(--s4); height: 56px; overflow-x: auto; }
   .main-nav { display: none; }
   .nav-toggle { display: block; }

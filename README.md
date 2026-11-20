@@ -29,7 +29,7 @@ sookshop/
 │   └── src/
 │       ├── layouts/          AdminLayout (sidebar + topbar)
 │       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Reviews, Users
-│       ├── api/              API clients (catalog, auth, insights, orders, reviews)
+│       ├── api/              API clients (catalog, auth, dashboard, insights, orders, reviews)
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/admin.css  admin design system
 └── template to start/ Original Sprylo HTML/CSS/JS template (design reference)
@@ -162,6 +162,28 @@ The storefront shop now has rating/featured filters and removable filter chips, 
 live search suggestions, and product pages show the rating breakdown, review list and a write/
 edit form. The admin **Reviews** page provides search, filters, hide/show controls and deletion.
 
+### Polish & dashboard (Step 7)
+
+The admin dashboard loads everything in one request:
+
+- `GET /api/admin/dashboard` (admin role only) — active product/category/customer counts, COD
+  order and revenue totals, cash collected, review stats, a 7-day orders/revenue chart, status
+  breakdown, recent orders, low-stock products and top sellers.
+
+To populate a believable demo store without touching real orders, run:
+
+```bash
+cd backend && npm run seed:demo
+```
+
+This adds three demo customers, six visible reviews and seven `DEMO-###` COD orders covering all
+statuses. Re-running it replaces only the demo orders. Demo login:
+`maya.demo@sookshop.test` / `Demo@123`.
+
+Responsive updates: the storefront header keeps search available on mobile (it moves to its own
+row below the logo/icons), and admin toolbars, dashboard panels and tables wrap or scroll cleanly
+on small screens.
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -183,7 +205,8 @@ Every feature is built across all three apps in the same step.
 - [x] **Step 6 — Search, filters & reviews**: API-side search, suggestions and rating filters →
   storefront shop controls, header suggestions and real product reviews → admin review moderation
   with visibility controls and stats.
-- [ ] **Step 7 — Polish**: seed data, dashboard charts, responsive fixes, final testing.
+- [x] **Step 7 — Polish**: idempotent demo seed, one-request admin dashboard with charts and
+  actionable lists, responsive storefront/admin layouts, and final lint/build/API verification.
 
 ## Payment note
 

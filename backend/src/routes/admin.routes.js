@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { getCartInsights } from '../controllers/admin.controller.js';
+import { getCartInsights, getDashboard } from '../controllers/admin.controller.js';
 import {
   getOrderStats,
   listAllOrders,
@@ -27,6 +27,7 @@ const router = Router();
 
 router.use(protect, authorize('admin'));
 
+router.get('/dashboard', asyncHandler(getDashboard));
 router.get('/insights', asyncHandler(getCartInsights));
 router.get('/order-stats', asyncHandler(getOrderStats));
 router.get('/orders', asyncHandler(listAllOrders));
