@@ -4,6 +4,8 @@ import adminRoutes from './admin.routes.js';
 import authRoutes from './auth.routes.js';
 import cartRoutes from './cart.routes.js';
 import categoryRoutes from './category.routes.js';
+import contactRoutes from './contact.routes.js';
+import newsletterRoutes from './newsletter.routes.js';
 import orderRoutes from './order.routes.js';
 import productRoutes from './product.routes.js';
 import reviewRoutes from './review.routes.js';
@@ -39,6 +41,8 @@ router.get('/', (req, res) => {
       shipping: 'GET /api/orders/shipping',
       adminOrders: '/api/admin/orders (admin only)',
       reviews: '/api/reviews',
+      contact: 'POST /api/contact',
+      newsletter: 'POST /api/newsletter/subscribe',
       suggest: 'GET /api/products/suggest?q=…',
     },
   });
@@ -46,6 +50,8 @@ router.get('/', (req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/cart', cartRoutes);
+router.use('/contact', contactRoutes);
+router.use('/newsletter', newsletterRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/admin', adminRoutes);
 router.use('/orders', orderRoutes);
