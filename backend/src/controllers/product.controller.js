@@ -2,6 +2,7 @@ import { isValidObjectId } from 'mongoose';
 
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
+import { Review } from '../models/Review.js';
 import { AppError } from '../utils/AppError.js';
 import { slugify } from '../utils/slugify.js';
 
@@ -12,6 +13,7 @@ const SORT_OPTIONS = {
   'price-asc': { price: 1 },
   'price-desc': { price: -1 },
   name: { name: 1 },
+  'name-desc': { name: -1 },
 };
 
 const EDITABLE_FIELDS = [
@@ -80,11 +82,23 @@ export async function listProducts(req, res) {
 
   if (req.query.q) {
     const pattern = escapeRegex(req.query.q);
+    const matchingCategories = await Category.find({
+      $or: [
+        { name: { $regex: pattern, $options: 'i' } },
+        { slug: { $regex: pattern, $options: 'i' } },
+      ],
+    }).select('_id');
+
     filter.$or = [
       { name: { $regex: pattern, $options: 'i' } },
+      { slug: { $regex: pattern, $options: 'i' } },
       { brand: { $regex: pattern, $options: 'i' } },
+      { sku: { $regex: pattern, $options: 'i' } },
       { description: { $regex: pattern, $options: 'i' } },
     ];
+    if (matchingCategories.length) {
+      filter.$or.push({ category: { $in: matchingCategories.map((item) => item._id) } });
+    }
   }
 
   if (req.query.min || req.query.max) {
@@ -128,6 +142,27 @@ export async function listBrands(req, res) {
   res.json({ success: true, data: brands.filter(Boolean).sort((a, b) => a.localeCompare(b)) });
 }
 
+export async function suggestProducts(req, res) {
+  const term = String(req.query.q || '').trim();
+  if (term.length < 2) return res.json({ success: true, data: [] });
+
+  const pattern = escapeRegex(term);
+  const products = await Product.find({
+    isActive: true,
+    $or: [
+      { name: { $regex: pattern, $options: 'i' } },
+      { brand: { $regex: pattern, $options: 'i' } },
+      { sku: { $regex: pattern, $options: 'i' } },
+    ],
+  })
+    .select('name slug brand price images')
+    .sort({ isFeatured: -1, name: 1 })
+    .limit(6)
+    .lean();
+
+  res.json({ success: true, data: products });
+}
+
 export async function getProduct(req, res) {
   const product = await Product.findOne({ slug: req.params.slug, isActive: true })
     .populate('category', 'name slug image')
@@ -143,7 +178,29 @@ export async function getProduct(req, res) {
     .limit(5)
     .lean();
 
-  res.json({ success: true, data: product, related });
+  const [latestReviews, ratingRows] = await Promise.all([
+    Review.find({ product: product._id, isVisible: true })
+      .populate('user', 'name')
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .lean(),
+    Review.aggregate([
+      { $match: { product: product._id, isVisible: true } },
+      { $group: { _id: '$rating', count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  ratingRows.forEach((row) => {
+    distribution[row._id] = row.count;
+  });
+
+  res.json({
+    success: true,
+    data: product,
+    related,
+    reviewSummary: { latest: latestReviews, distribution },
+  });
 }
 
 export async function createProduct(req, res) {

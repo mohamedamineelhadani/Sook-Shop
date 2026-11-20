@@ -11,10 +11,12 @@ import {
   UserIcon,
 } from '../components/Icons.jsx';
 import { logout } from '../api/auth.js';
+import { suggestProducts } from '../api/reviews.js';
 import { APP_NAME } from '../config.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useCart } from '../hooks/useCart.js';
 import { useWishlist } from '../hooks/useWishlist.js';
+import { formatPrice, imageUrl } from '../lib/format.js';
 
 const navLinks = [
   { to: '/', label: 'Home', end: true },
@@ -57,6 +59,8 @@ export default function StoreLayout() {
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const accountHref = user ? '/account' : '/login';
@@ -93,11 +97,40 @@ export default function StoreLayout() {
     };
   }, [drawerOpen]);
 
+  // Suggestions are debounced so typing does not fire a request per keystroke.
+  useEffect(() => {
+    const term = query.trim();
+    if (term.length < 2) return undefined;
+
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      suggestProducts(term)
+        .then((items) => {
+          if (!alive) return;
+          setSuggestions(items);
+          setSuggestOpen(true);
+        })
+        .catch(() => {
+          if (alive) setSuggestions([]);
+        });
+    }, 220);
+
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
   const submitSearch = (event) => {
     event.preventDefault();
     const term = query.trim();
+    setSuggestOpen(false);
     navigate(term ? `/shop?q=${encodeURIComponent(term)}` : '/shop');
     setDrawerOpen(false);
+  };
+
+  const closeSuggestions = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setSuggestOpen(false);
   };
 
   return (
@@ -125,17 +158,59 @@ export default function StoreLayout() {
         <div className="container">
           <Brand />
 
-          <form className="search" role="search" onSubmit={submitSearch}>
+          <form className="search" role="search" onSubmit={submitSearch} onBlur={closeSuggestions}>
             <input
               type="text"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setQuery(value);
+                if (value.trim().length < 2) {
+                  setSuggestions([]);
+                  setSuggestOpen(false);
+                }
+              }}
+              onFocus={() => setSuggestions.length && setSuggestOpen(true)}
               placeholder="Search for products, brands, categories…"
               aria-label="Search the store"
+              autoComplete="off"
             />
             <button type="submit" aria-label="Search">
               <SearchIcon size={18} />
             </button>
+
+            {suggestOpen && (
+              <div className="search-suggest" aria-label="Product suggestions">
+                {suggestions.length > 0 ? (
+                  suggestions.map((item) => (
+                    <Link
+                      key={item._id}
+                      to={`/products/${item.slug}`}
+                      className="search-suggest-item"
+                      onClick={() => {
+                        setSuggestOpen(false);
+                        setSuggestions([]);
+                        setQuery('');
+                      }}
+                    >
+                      <img src={imageUrl(item.images?.[0], 120)} alt="" />
+                      <span className="search-suggest-text">
+                        <strong>{item.name}</strong>
+                        <small>{item.brand || 'Sookshop'}</small>
+                      </span>
+                      <b>{formatPrice(item.price)}</b>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="search-suggest-empty">
+                    No quick matches. Press Enter to search the whole store.
+                  </p>
+                )}
+                <button type="submit" className="search-suggest-all">
+                  See all results for “{query.trim()}” →
+                </button>
+              </div>
+            )}
           </form>
 
           <div className="icon-row">

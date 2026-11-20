@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { getProduct } from '../api/catalog.js';
 import ProductCard from '../components/ProductCard.jsx';
+import ReviewsSection from '../components/ReviewsSection.jsx';
 import { ErrorState, LoadingState } from '../components/States.jsx';
 import { useCart } from '../hooks/useCart.js';
 import { useWishlist } from '../hooks/useWishlist.js';
@@ -15,6 +16,8 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [loadedSlug, setLoadedSlug] = useState(null);
   const [error, setError] = useState('');
   const loading = loadedSlug !== slug;
@@ -31,6 +34,7 @@ export default function ProductPage() {
         if (!alive) return;
         setProduct(data.data);
         setRelated(data.related || []);
+        setReviewSummary(data.reviewSummary || null);
         setColor(data.data.colors?.[0] || '');
         setSize(data.data.sizes?.[0] || '');
         setError('');
@@ -44,7 +48,7 @@ export default function ProductPage() {
     return () => {
       alive = false;
     };
-  }, [slug]);
+  }, [slug, reloadKey]);
 
   if (loading) return <LoadingState label="Loading product…" />;
   if (error || !product)
@@ -236,7 +240,7 @@ export default function ProductPage() {
 
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--s8)' }}>
+          <div className="pdp-lower-grid">
             <div>
               <h2 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--s5)' }}>Specifications</h2>
               <table className="spec-table">
@@ -260,19 +264,11 @@ export default function ProductPage() {
 
             <div>
               <h2 style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--s5)' }}>Reviews</h2>
-              <div className="review-summary">
-                <div style={{ textAlign: 'center' }}>
-                  <div className="review-score">{product.rating?.average || 0}</div>
-                  <div style={{ color: 'var(--amber)', fontSize: 18 }}>
-                    {formatStars(product.rating?.average)}
-                  </div>
-                  <div className="review-count">{product.rating?.count || 0} reviews</div>
-                </div>
-                <p style={{ color: 'var(--fg-soft)', fontSize: 'var(--text-sm)' }}>
-                  Customer reviews will appear here once the Reviews feature is connected.
-                  The rating above is the current store rating for this product.
-                </p>
-              </div>
+              <ReviewsSection
+                product={product}
+                summary={reviewSummary}
+                onChanged={() => setReloadKey((key) => key + 1)}
+              />
             </div>
           </div>
         </div>

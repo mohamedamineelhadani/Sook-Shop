@@ -32,6 +32,22 @@ export const protect = asyncHandler(async (req, res, next) => {
   next();
 });
 
+// Attaches the user when a token is present, but never blocks the request.
+// Used by public endpoints that still personalise their response.
+export const optionalAuth = asyncHandler(async (req, res, next) => {
+  const token = tokenFrom(req);
+  if (!token) return next();
+
+  try {
+    const decoded = jwt.verify(token, config.jwtSecret);
+    const user = await User.findById(decoded.id);
+    if (user && user.isActive) req.user = user;
+  } catch {
+    // An invalid token simply means "not logged in" here.
+  }
+  next();
+});
+
 export function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

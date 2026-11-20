@@ -11,6 +11,8 @@ const SORT_OPTIONS = [
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
   { value: 'rating', label: 'Highest rated' },
+  { value: 'name', label: 'Name: A–Z' },
+  { value: 'name-desc', label: 'Name: Z–A' },
 ];
 
 export default function ShopPage() {
@@ -103,6 +105,46 @@ export default function ShopPage() {
   };
 
   const clearFilters = () => setSearchParams(new URLSearchParams());
+
+  const activeFilters = [];
+  if (searchParams.get('q')) activeFilters.push(['q', `“${searchParams.get('q')}”`]);
+  if (searchParams.get('min') || searchParams.get('max')) {
+    activeFilters.push([
+      'price',
+      `${searchParams.get('min') ? `$${searchParams.get('min')}` : '$0'} – ${
+        searchParams.get('max') ? `$${searchParams.get('max')}` : 'any'
+      }`,
+    ]);
+  }
+  (searchParams.get('category') || '').split(',').filter(Boolean).forEach((value) => {
+    const category = categories.find((item) => item.slug === value);
+    activeFilters.push([`category:${value}`, category?.name || value]);
+  });
+  (searchParams.get('brand') || '').split(',').filter(Boolean).forEach((value) => {
+    activeFilters.push([`brand:${value}`, value]);
+  });
+  if (searchParams.get('minRating')) {
+    activeFilters.push(['minRating', `${searchParams.get('minRating')}★ & up`]);
+  }
+  if (searchParams.get('featured') === 'true') activeFilters.push(['featured', 'Featured']);
+  if (searchParams.get('inStock') === 'true') activeFilters.push(['inStock', 'In stock']);
+  if (searchParams.get('onSale') === 'true') activeFilters.push(['onSale', 'On sale']);
+
+  const removeFilter = (key) => {
+    if (key === 'price') {
+      const next = new URLSearchParams(searchParams);
+      next.delete('min');
+      next.delete('max');
+      next.delete('page');
+      return setSearchParams(next);
+    }
+    if (key.startsWith('category:') || key.startsWith('brand:')) {
+      const [group, value] = key.split(':');
+      const current = (searchParams.get(group) || '').split(',').filter(Boolean);
+      return setParam(group, current.filter((item) => item !== value).join(','));
+    }
+    setParam(key, '');
+  };
 
   const { data, pagination } = result;
   const total = pagination.total || 0;
@@ -208,6 +250,25 @@ export default function ShopPage() {
               </div>
 
               <div className="filter-block">
+                <h3>Customer rating</h3>
+                {[4, 3].map((value) => (
+                  <label key={value}>
+                    <input
+                      type="checkbox"
+                      checked={searchParams.get('minRating') === String(value)}
+                      onChange={(event) =>
+                        setParam('minRating', event.target.checked ? String(value) : '')
+                      }
+                    />
+                    <span className="filter-stars" aria-hidden="true">
+                      {'★'.repeat(value)}
+                    </span>
+                    &amp; up
+                  </label>
+                ))}
+              </div>
+
+              <div className="filter-block">
                 <h3>Availability</h3>
                 <label>
                   <input
@@ -224,6 +285,14 @@ export default function ShopPage() {
                     onChange={(event) => setParam('onSale', event.target.checked ? 'true' : '')}
                   />
                   On sale
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={searchParams.get('featured') === 'true'}
+                    onChange={(event) => setParam('featured', event.target.checked ? 'true' : '')}
+                  />
+                  Featured products
                 </label>
               </div>
 
@@ -254,6 +323,30 @@ export default function ShopPage() {
                   </select>
                 </div>
               </div>
+
+              {activeFilters.length > 0 && (
+                <div className="active-filters" aria-label="Active filters">
+                  <span className="active-filters-label">FILTERED BY</span>
+                  {activeFilters.map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className="filter-chip"
+                      onClick={() => removeFilter(key)}
+                      aria-label={`Remove ${label} filter`}
+                    >
+                      {label} <span aria-hidden="true">×</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="filter-chip filter-chip--clear"
+                    onClick={clearFilters}
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
 
               {error && <ErrorState message={error} onRetry={() => window.location.reload()} />}
               {loading ? (

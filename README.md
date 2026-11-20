@@ -12,15 +12,15 @@ sookshop/
 │       ├── app.js            Express app, CORS, middleware, routes
 │       ├── server.js         DB connection + server startup
 │       ├── config/           env + MongoDB connection
-│       ├── models/           Category, Product, User, Cart, Order
+│       ├── models/           Category, Product, User, Cart, Order, Review
 │       ├── routes/           feature routes (added step by step)
 │       ├── middleware/       async wrapper, 404, error handler
 │       └── utils/            AppError
 ├── frontend/          Customer storefront — Vite + React (port 5173)
 │   └── src/
-│       ├── components/       shared UI (icons, placeholders)
+│       ├── components/       shared UI (icons, product cards, reviews)
 │       ├── layouts/          StoreLayout (header, nav, drawer, footer)
-│       ├── api/              API clients (cart, wishlist, orders)
+│       ├── api/              API clients (cart, wishlist, orders, reviews)
 │       ├── context/          Auth, Cart & Wishlist providers
 │       ├── pages/            Home, Shop, Product, Cart, Checkout, Orders, Wishlist, …
 │       ├── lib/api.js        Axios client for the backend
@@ -28,8 +28,8 @@ sookshop/
 ├── admin/             Admin panel — Vite + React (port 5174)
 │   └── src/
 │       ├── layouts/          AdminLayout (sidebar + topbar)
-│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Users
-│       ├── api/              API clients (catalog, auth, insights, orders)
+│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Reviews, Users
+│       ├── api/              API clients (catalog, auth, insights, orders, reviews)
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/admin.css  admin design system
 └── template to start/ Original Sprylo HTML/CSS/JS template (design reference)
@@ -127,6 +127,41 @@ an order validates stock, decrements it, empties the cart and stores a snapshot 
 The storefront has `/checkout` and `/orders/:id` pages; the admin **Orders** page lists every
 COD order and lets staff update its status.
 
+### Search, filters & reviews (Step 6)
+
+Search is handled by the API, so it also matches slugs, SKUs, descriptions and category names —
+not just product titles.
+
+**Public endpoints**
+
+- `GET /api/products?q=…` — expanded search across name, slug, brand, SKU, description and
+  category; combine with `category`, `brand`, `min`, `max`, `inStock=true`, `onSale=true`,
+  `featured=true`, `minRating`, `sort` and `page`/`limit`
+- `GET /api/products/suggest?q=…` — up to 6 header suggestions (minimum 2 characters)
+- `GET /api/reviews?product=<id-or-slug>` — visible reviews with `summary` (average, count,
+  1–5 star distribution), `pagination`, and the signed-in user's own review as `mine`;
+  optional `rating`, `sort=newest|highest|lowest` and `page`/`limit`
+
+**Reviews (login required)**
+
+- `POST /api/reviews` — body: `{ productId, rating, title?, body }`. One review per product:
+  posting again updates your existing review.
+- `PUT /api/reviews/:id` / `DELETE /api/reviews/:id` — edit/remove your own review (admins may
+  also remove any review). Ratings are recalculated on the product after every write.
+- `verifiedPurchase` is set automatically from a delivered COD order containing the product.
+
+**Admin** (admin role only)
+
+- `GET /api/admin/reviews` — all reviews, filter with `q`, `rating` and
+  `visibility=visible|hidden`
+- `GET /api/admin/review-stats` — totals, hidden count and average rating
+- `PATCH /api/admin/reviews/:id/visibility` — body: `{ isVisible }`. Hidden reviews disappear
+  from the storefront and no longer affect the product rating.
+
+The storefront shop now has rating/featured filters and removable filter chips, the header has
+live search suggestions, and product pages show the rating breakdown, review list and a write/
+edit form. The admin **Reviews** page provides search, filters, hide/show controls and deletion.
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -145,8 +180,9 @@ Every feature is built across all three apps in the same step.
 - [x] **Step 5 — Orders (COD checkout)**: server-priced order API with shipping details, stock
   updates and COD status → storefront checkout, confirmation and order history → admin order
   list with status management and live stats.
-- [ ] **Step 6 — Search, filters & reviews**: API-side search/filter → storefront shop
-  controls → admin oversight.
+- [x] **Step 6 — Search, filters & reviews**: API-side search, suggestions and rating filters →
+  storefront shop controls, header suggestions and real product reviews → admin review moderation
+  with visibility controls and stats.
 - [ ] **Step 7 — Polish**: seed data, dashboard charts, responsive fixes, final testing.
 
 ## Payment note

@@ -6,6 +6,7 @@ import cartRoutes from './cart.routes.js';
 import categoryRoutes from './category.routes.js';
 import orderRoutes from './order.routes.js';
 import productRoutes from './product.routes.js';
+import reviewRoutes from './review.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 
 const router = Router();
@@ -37,6 +38,8 @@ router.get('/', (req, res) => {
       orders: '/api/orders',
       shipping: 'GET /api/orders/shipping',
       adminOrders: '/api/admin/orders (admin only)',
+      reviews: '/api/reviews',
+      suggest: 'GET /api/products/suggest?q=…',
     },
   });
 });
@@ -46,6 +49,7 @@ router.use('/cart', cartRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/admin', adminRoutes);
 router.use('/orders', orderRoutes);
+router.use('/reviews', reviewRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/products', productRoutes);
 

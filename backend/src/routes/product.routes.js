@@ -6,6 +6,7 @@ import {
   getProduct,
   listBrands,
   listProducts,
+  suggestProducts,
   updateProduct,
 } from '../controllers/product.controller.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
@@ -22,6 +23,7 @@ const adminOnly = [protect, authorize('admin')];
 
 router.get('/', asyncHandler(listProducts));
 router.get('/brands', asyncHandler(listBrands));
+router.get('/suggest', asyncHandler(suggestProducts));
 router.get('/:slug', asyncHandler(getProduct));
 router.post('/', ...adminOnly, createProductValidator, validate, asyncHandler(createProduct));
 router.put(

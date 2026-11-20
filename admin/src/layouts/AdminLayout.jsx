@@ -8,6 +8,7 @@ import {
   Package,
   Search,
   ShoppingCart,
+  Star,
   Store,
   Tags,
   Users,
@@ -25,6 +26,7 @@ const menu = [
   { to: '/categories', label: 'Categories', icon: Tags },
   { to: '/insights', label: 'Insights', icon: Heart },
   { to: '/orders', label: 'Orders', icon: ShoppingCart },
+  { to: '/reviews', label: 'Reviews', icon: Star },
   { to: '/users', label: 'Customers', icon: Users },
 ];
 
