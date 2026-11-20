@@ -114,7 +114,7 @@ export default function StoreLayout() {
           </span>
           <span className="links">
             {user && <span className="utility-user">Hi, {user.name.split(' ')[0]}</span>}
-            <Link to="/contact">Track order</Link>
+            <Link to="/orders">Track order</Link>
             <Link to="/contact">Help</Link>
             <span>EN · USD</span>
           </span>

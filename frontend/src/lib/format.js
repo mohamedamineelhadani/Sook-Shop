@@ -6,6 +6,9 @@ export const formatStars = (average = 0) => {
   return '★'.repeat(Math.min(5, Math.max(0, filled))) + '☆'.repeat(Math.max(0, 5 - filled));
 };
 
+export const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString('en-US', { dateStyle: 'medium' }) : '—';
+
 export const imageUrl = (url, width = 800) =>
   url ? String(url).replace(/w=\d+/, `w=${width}`) : PLACEHOLDER_IMAGE;
 

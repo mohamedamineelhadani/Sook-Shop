@@ -1,15 +1,11 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { LoadingState } from '../components/States.jsx';
-import { useAuth } from '../hooks/useAuth.js';
 import { useCart } from '../hooks/useCart.js';
 import { formatPrice, imageUrl } from '../lib/format.js';
 
 export default function CartPage() {
   const { items, count, subtotal, updateQuantity, removeItem, clearCart, ready, error } = useCart();
-  const { user } = useAuth();
-  const [checkoutNote, setCheckoutNote] = useState(false);
 
   return (
     <>
@@ -99,15 +95,9 @@ export default function CartPage() {
               <div className="cart-line"><span>Shipping</span><span>Calculated at checkout</span></div>
               <div className="cart-line"><span>Payment</span><strong>Cash on delivery</strong></div>
               <div className="cart-line is-total"><span>Total</span><span>{formatPrice(subtotal)}</span></div>
-              <button className="btn btn--indigo" onClick={() => setCheckoutNote(true)}>
+              <Link to="/checkout" className="btn btn--indigo">
                 Proceed to checkout →
-              </button>
-              {checkoutNote && (
-                <p className="cart-notice">
-                  Checkout and order placement are being built in Step 5. Your cart is saved
-                  {user ? ' to your account' : ' on this device'} until then.
-                </p>
-              )}
+              </Link>
               <p className="cart-notice">
                 No card needed. Pay in cash when your order arrives at your door.
               </p>

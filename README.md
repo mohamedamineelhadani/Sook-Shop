@@ -20,16 +20,16 @@ sookshop/
 │   └── src/
 │       ├── components/       shared UI (icons, placeholders)
 │       ├── layouts/          StoreLayout (header, nav, drawer, footer)
-│       ├── api/              API clients (cart, wishlist)
+│       ├── api/              API clients (cart, wishlist, orders)
 │       ├── context/          Auth, Cart & Wishlist providers
-│       ├── pages/            Home, Shop, Product, Cart, Wishlist, Contact, …
+│       ├── pages/            Home, Shop, Product, Cart, Checkout, Orders, Wishlist, …
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/store.css  converted template design system
 ├── admin/             Admin panel — Vite + React (port 5174)
 │   └── src/
 │       ├── layouts/          AdminLayout (sidebar + topbar)
 │       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Users
-│       ├── api/              API clients (catalog, auth, insights)
+│       ├── api/              API clients (catalog, auth, insights, orders)
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/admin.css  admin design system
 └── template to start/ Original Sprylo HTML/CSS/JS template (design reference)
@@ -104,6 +104,29 @@ invalid/out-of-stock products are dropped).
 the 20 most recently updated carts, customer wishlists, and a popularity ranking. The admin
 panel shows this on the **Insights** page and on the dashboard cards.
 
+### Orders & checkout (Step 5)
+
+Orders are cash on delivery only. Prices and shipping are recalculated on the server from the
+database, never from the browser. Shipping is **$10**, free on subtotals of **$200+**. Placing
+an order validates stock, decrements it, empties the cart and stores a snapshot of each item.
+
+**Customer** (login required):
+
+- `GET /api/orders/shipping` — public shipping rule used by checkout
+- `POST /api/orders` — body: `{ shippingAddress, notes?, saveAddress? }`
+- `GET /api/orders` — your order history (paged with `page` / `limit`)
+- `GET /api/orders/:id` — order details (owner or admin only)
+
+**Admin** (admin role only):
+
+- `GET /api/admin/orders` — all orders, filter with `status` and `q`, paged
+- `GET /api/admin/order-stats` — totals by status, revenue and cash collected
+- `PATCH /api/admin/orders/:id/status` — body: `{ status }`; marking `delivered` sets
+  `paymentStatus` to `paid`
+
+The storefront has `/checkout` and `/orders/:id` pages; the admin **Orders** page lists every
+COD order and lets staff update its status.
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -119,8 +142,9 @@ Every feature is built across all three apps in the same step.
   `npm run seed:admin` in `backend/` (default `admin@sookshop.com` / `Admin@123`).
 - [x] **Step 4 — Cart & Wishlist**: cart/wishlist API with guest sync → storefront cart and
   wishlist with working heart buttons and counts → admin read-only insights page.
-- [ ] **Step 5 — Orders (COD checkout)**: order API with shipping details and COD status →
-  storefront checkout/confirmation → admin order management.
+- [x] **Step 5 — Orders (COD checkout)**: server-priced order API with shipping details, stock
+  updates and COD status → storefront checkout, confirmation and order history → admin order
+  list with status management and live stats.
 - [ ] **Step 6 — Search, filters & reviews**: API-side search/filter → storefront shop
   controls → admin oversight.
 - [ ] **Step 7 — Polish**: seed data, dashboard charts, responsive fixes, final testing.

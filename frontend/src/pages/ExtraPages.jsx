@@ -1,19 +1,5 @@
 import PlaceholderPage from '../components/PlaceholderPage.jsx';
 
-export function OrdersPage() {
-  return (
-    <PlaceholderPage
-      title="My orders"
-      subtitle="Cash-on-delivery order history arrives with the Orders step."
-      steps={[
-        'Build the order creation and order history APIs',
-        'Create the checkout flow in the storefront',
-        'Let admins manage order status in the admin panel',
-      ]}
-    />
-  );
-}
-
 export function NotFoundPage() {
   return (
     <PlaceholderPage

@@ -4,6 +4,7 @@ import adminRoutes from './admin.routes.js';
 import authRoutes from './auth.routes.js';
 import cartRoutes from './cart.routes.js';
 import categoryRoutes from './category.routes.js';
+import orderRoutes from './order.routes.js';
 import productRoutes from './product.routes.js';
 import wishlistRoutes from './wishlist.routes.js';
 
@@ -33,8 +34,9 @@ router.get('/', (req, res) => {
       cart: '/api/cart',
       wishlist: '/api/wishlist',
       adminInsights: 'GET /api/admin/insights (admin only)',
-      // Added in a later step:
-      // orders: '/api/orders'
+      orders: '/api/orders',
+      shipping: 'GET /api/orders/shipping',
+      adminOrders: '/api/admin/orders (admin only)',
     },
   });
 });
@@ -43,6 +45,7 @@ router.use('/auth', authRoutes);
 router.use('/cart', cartRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/admin', adminRoutes);
+router.use('/orders', orderRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/products', productRoutes);
 

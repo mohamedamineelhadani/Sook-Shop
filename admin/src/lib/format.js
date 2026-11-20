@@ -1,6 +1,9 @@
 export const formatPrice = (value) =>
   `$${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
+export const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString('en-US', { dateStyle: 'medium' }) : '—';
+
 export const PLACEHOLDER_IMAGE =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(

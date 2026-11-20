@@ -9,6 +9,8 @@ const orderItemSchema = new Schema(
     image: { type: String, default: '' },
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
+    color: { type: String, trim: true, default: '' },
+    size: { type: String, trim: true, default: '' },
   },
   { _id: false },
 );
@@ -26,8 +28,11 @@ const shippingAddressSchema = new Schema(
   { _id: false },
 );
 
+const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
 const orderSchema = new Schema(
   {
+    orderNumber: { type: String, unique: true, sparse: true, trim: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     items: { type: [orderItemSchema], required: true },
     shippingAddress: { type: shippingAddressSchema, required: true },
@@ -35,7 +40,7 @@ const orderSchema = new Schema(
     paymentStatus: { type: String, enum: ['pending', 'paid'], default: 'pending' },
     orderStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ORDER_STATUSES,
       default: 'pending',
     },
     subtotal: { type: Number, required: true, min: 0 },
@@ -53,4 +58,5 @@ orderSchema.virtual('itemCount').get(function itemCount() {
 
 orderSchema.set('toJSON', { virtuals: true });
 
+export { ORDER_STATUSES };
 export const Order = mongoose.model('Order', orderSchema);
