@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   createProduct,
@@ -153,9 +154,18 @@ export default function ProductsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [loadedKey, setLoadedKey] = useState(null);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') || '';
+  const stockFilter = searchParams.get('stock') || '';
   const [categoryFilter, setCategoryFilter] = useState('');
   const [editing, setEditing] = useState(null);
+
+  const updateParam = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
 
   const loading = loadedKey !== refreshKey;
 
@@ -187,7 +197,9 @@ export default function ProductsPage() {
     const matchesCategory =
       !categoryFilter ||
       (product.category?._id || product.category) === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesStock =
+      !stockFilter || (stockFilter === 'low' && Number(product.stock || 0) <= 10);
+    return matchesSearch && matchesCategory && matchesStock;
   });
 
   const saveProduct = async (payload) => {
@@ -225,7 +237,7 @@ export default function ProductsPage() {
           <input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => updateParam('q', event.target.value)}
             placeholder="Search by name, brand or SKU"
             aria-label="Search products"
           />
@@ -242,6 +254,15 @@ export default function ProductsPage() {
               {category.name}
             </option>
           ))}
+        </select>
+        <select
+          className="admin-select"
+          value={stockFilter}
+          onChange={(event) => updateParam('stock', event.target.value)}
+          aria-label="Filter by stock"
+        >
+          <option value="">All stock levels</option>
+          <option value="low">Low stock (10 or less)</option>
         </select>
         <span className="admin-result-count">{products.length} products</span>
       </div>

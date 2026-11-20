@@ -28,8 +28,8 @@ sookshop/
 ├── admin/             Admin panel — Vite + React (port 5174)
 │   └── src/
 │       ├── layouts/          AdminLayout (sidebar + topbar)
-│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Reviews, Users, Messages, Newsletter
-│       ├── api/              API clients (catalog, auth, dashboard, insights, orders, reviews, contact, newsletter)
+│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Reviews, Customers, Messages, Newsletter, Notifications, Profile
+│       ├── api/              API clients (catalog, auth, customers, search, notifications, dashboard, insights, orders, reviews, contact, newsletter)
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/admin.css  admin design system
 └── template to start/ Original Sprylo HTML/CSS/JS template (design reference)
@@ -226,6 +226,39 @@ panel.
 The **20% discount copy is intentionally just store copy**: there is no coupon code and no email
 delivery in this step. Emails and messages remain visible only to logged-in admins.
 
+### Customers, search, notifications & profile (Step 9)
+
+All endpoints in this step are admin-only. The topbar now has one live search that spans products,
+orders and customers, a notification bell generated from real store data, and an admin profile menu.
+
+**Admin endpoints**
+
+- `GET /api/admin/customers` — customer accounts with order/review totals and spend; filter with
+  `q`, `isActive`, `page` and `limit`; also returns total/active/inactive/with-order stats
+- `GET /api/admin/customers/:id` — one customer with address, last login, recent orders and reviews
+- `PATCH /api/admin/customers/:id/active` — body: `{ isActive }`; deactivated customers cannot sign in
+- `GET /api/admin/search?q=…` — grouped product/order/customer results (minimum 2 characters)
+- `GET /api/admin/notifications` — live alerts and counts from unread messages, pending orders,
+  low stock, hidden reviews, new subscribers and new customers
+- `GET /api/admin/profile` — current admin account
+- `PATCH /api/admin/profile` — body: `{ name, email, phone? }`
+- `PATCH /api/admin/profile/password` — body:
+  `{ currentPassword, newPassword, confirmPassword }` (new password minimum 8 characters)
+
+**Admin pages**
+
+- **Customers** (`/users`) — searchable/filterable table, customer metrics and a detail modal with
+  recent orders/reviews plus an account-status toggle
+- **Global search** — 280 ms debounced popover in the topbar; Enter opens the first result
+- **Notifications** (`/notifications`) — full alert list and summary cards; the bell badge is the
+  total actionable count and refreshes when opened
+- **Profile** (`/profile`, `/profile?tab=password`) — edit admin details or change the password
+
+Notification items deep-link with query params that the target pages understand:
+`/orders?status=pending`, `/products?stock=low`, `/reviews?visibility=hidden`, `/users?q=…`,
+`/messages` and `/newsletter`. Reviews, orders and products now keep their filters in the URL so
+those links restore the correct filtered view.
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -251,6 +284,9 @@ Every feature is built across all three apps in the same step.
   actionable lists, responsive storefront/admin layouts, and final lint/build/API verification.
 - [x] **Step 8 — Contact & footer**: real contact form + admin inbox, newsletter email capture +
   admin list, all footer pages built and linked, Resources column removed. No emails are sent.
+- [x] **Step 9 — Admin operations**: customer accounts with order/review stats and status controls,
+  grouped global admin search, live notification feed with deep links, and admin profile/password
+  settings.
 
 ## Payment note
 

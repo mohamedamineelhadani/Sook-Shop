@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, RefreshCw, Search, Star, Trash2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   deleteReview,
@@ -18,9 +19,17 @@ export default function AdminReviewsPage() {
   const [loadedKey, setLoadedKey] = useState(null);
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
-  const [search, setSearch] = useState('');
-  const [visibility, setVisibility] = useState('');
-  const [rating, setRating] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') || '';
+  const visibility = searchParams.get('visibility') || '';
+  const rating = searchParams.get('rating') || '';
+
+  const updateParam = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
 
   const loading = loadedKey !== refreshKey;
 
@@ -129,7 +138,7 @@ export default function AdminReviewsPage() {
           <input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => updateParam('q', event.target.value)}
             placeholder="Search review, customer or product"
             aria-label="Search reviews"
           />
@@ -137,7 +146,7 @@ export default function AdminReviewsPage() {
         <select
           className="admin-select"
           value={visibility}
-          onChange={(event) => setVisibility(event.target.value)}
+          onChange={(event) => updateParam('visibility', event.target.value)}
           aria-label="Filter by visibility"
         >
           <option value="">All visibility</option>
@@ -147,7 +156,7 @@ export default function AdminReviewsPage() {
         <select
           className="admin-select"
           value={rating}
-          onChange={(event) => setRating(event.target.value)}
+          onChange={(event) => updateParam('rating', event.target.value)}
           aria-label="Filter by rating"
         >
           <option value="">All ratings</option>

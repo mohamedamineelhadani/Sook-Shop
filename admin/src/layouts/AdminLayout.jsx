@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import {
-  Bell,
   Heart,
   LayoutDashboard,
   LogOut,
   Mail,
   Menu,
   Package,
-  Search,
   Send,
   ShoppingCart,
   Star,
@@ -19,6 +17,9 @@ import {
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { logout } from '../api/auth.js';
+import AdminGlobalSearch from '../components/AdminGlobalSearch.jsx';
+import AdminNotifications from '../components/AdminNotifications.jsx';
+import AdminProfileMenu from '../components/AdminProfileMenu.jsx';
 import { APP_NAME } from '../config.js';
 import { useAuth } from '../hooks/useAuth.js';
 
@@ -38,14 +39,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
-
-  const initials = (user?.name || 'Admin')
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const { setUser } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -129,16 +123,9 @@ export default function AdminLayout() {
             <span>Sookshop control panel</span>
           </div>
           <div className="admin-topbar-actions">
-            <label className="admin-search">
-              <Search size={16} />
-              <input type="search" placeholder="Search anything…" aria-label="Search admin" />
-            </label>
-            <button className="admin-icon-button" aria-label="Notifications">
-              <Bell size={18} />
-            </button>
-            <div className="admin-avatar" title={user?.name || 'Admin'}>
-              {initials}
-            </div>
+            <AdminGlobalSearch />
+            <AdminNotifications />
+            <AdminProfileMenu onLogout={handleLogout} />
           </div>
         </header>
 

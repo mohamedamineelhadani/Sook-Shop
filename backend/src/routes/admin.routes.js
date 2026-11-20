@@ -2,6 +2,18 @@ import { Router } from 'express';
 
 import { getCartInsights, getDashboard } from '../controllers/admin.controller.js';
 import {
+  getCustomer,
+  listCustomers,
+  setCustomerActive,
+} from '../controllers/adminCustomer.controller.js';
+import { getAdminNotifications } from '../controllers/adminNotification.controller.js';
+import {
+  changeAdminPassword,
+  getAdminProfile,
+  updateAdminProfile,
+} from '../controllers/adminProfile.controller.js';
+import { globalSearch } from '../controllers/adminSearch.controller.js';
+import {
   deleteContactMessage,
   listContactMessages,
   setContactMessageRead,
@@ -24,6 +36,12 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { authorize, protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import {
+  adminUserIdValidator,
+  changeAdminPasswordValidator,
+  customerActiveValidator,
+  updateAdminProfileValidator,
+} from '../validators/admin.validator.js';
+import {
   contactIdValidator,
   readValidator,
 } from '../validators/contact.validator.js';
@@ -42,6 +60,25 @@ const router = Router();
 router.use(protect, authorize('admin'));
 
 router.get('/dashboard', asyncHandler(getDashboard));
+router.get('/search', asyncHandler(globalSearch));
+router.get('/notifications', asyncHandler(getAdminNotifications));
+router.get('/profile', asyncHandler(getAdminProfile));
+router.patch('/profile', updateAdminProfileValidator, validate, asyncHandler(updateAdminProfile));
+router.patch(
+  '/profile/password',
+  changeAdminPasswordValidator,
+  validate,
+  asyncHandler(changeAdminPassword),
+);
+router.get('/customers', asyncHandler(listCustomers));
+router.get('/customers/:id', adminUserIdValidator, validate, asyncHandler(getCustomer));
+router.patch(
+  '/customers/:id/active',
+  adminUserIdValidator,
+  customerActiveValidator,
+  validate,
+  asyncHandler(setCustomerActive),
+);
 router.get('/contact-messages', asyncHandler(listContactMessages));
 router.patch(
   '/contact-messages/:id/read',

@@ -12,7 +12,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { getDashboard } from '../api/dashboard.js';
 import {
@@ -21,7 +21,6 @@ import {
   getOrderStats,
   updateOrderStatus,
 } from '../api/orders.js';
-import AdminPlaceholder from '../components/AdminPlaceholder.jsx';
 import Modal from '../components/Modal.jsx';
 import { formatDate, formatPrice, imageUrl } from '../lib/format.js';
 import { ORDER_STATUSES, statusBadge, statusLabel } from '../lib/orders.js';
@@ -460,9 +459,17 @@ export function OrdersPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [loadedKey, setLoadedKey] = useState(null);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get('q') || '';
+  const statusFilter = searchParams.get('status') || '';
   const [selected, setSelected] = useState(null);
+
+  const updateParam = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
 
   const loading = loadedKey !== refreshKey;
 
@@ -554,7 +561,7 @@ export function OrdersPage() {
           <input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => updateParam('q', event.target.value)}
             placeholder="Search order number, customer or phone"
             aria-label="Search orders"
           />
@@ -562,7 +569,7 @@ export function OrdersPage() {
         <select
           className="admin-select"
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
+          onChange={(event) => updateParam('status', event.target.value)}
           aria-label="Filter by status"
         >
           <option value="">All statuses</option>
@@ -662,19 +669,5 @@ export function OrdersPage() {
         </Modal>
       )}
     </>
-  );
-}
-
-export function UsersPage() {
-  return (
-    <AdminPlaceholder
-      title="Customer management"
-      description="View registered customers and their order history. Admin accounts are managed here too."
-      steps={[
-        'Create the customers table with order history',
-        'Add account status controls',
-        'Show live customer counts on the dashboard',
-      ]}
-    />
   );
 }
