@@ -9,6 +9,14 @@ import CheckoutPage from './pages/CheckoutPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
 import { NotFoundPage } from './pages/ExtraPages.jsx';
 import HomePage from './pages/HomePage.jsx';
+import {
+  AboutPage,
+  FaqsPage,
+  HelpCentrePage,
+  PrivacyPage,
+  ShippingPolicyPage,
+  TermsPage,
+} from './pages/InfoPages.jsx';
 import OrderDetailPage from './pages/OrderDetailPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import ProductPage from './pages/ProductPage.jsx';
@@ -32,6 +40,12 @@ export default function App() {
           }
         />
         <Route path="contact" element={<ContactPage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="shipping-policy" element={<ShippingPolicyPage />} />
+        <Route path="help-centre" element={<HelpCentrePage />} />
+        <Route path="faqs" element={<FaqsPage />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
         <Route path="login" element={<AuthPage />} />
         <Route
           path="account"

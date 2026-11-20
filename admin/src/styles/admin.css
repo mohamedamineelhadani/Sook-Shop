@@ -1251,3 +1251,26 @@ button.admin-nav-link {
   .admin-toolbar > .admin-select,
   .admin-toolbar > .admin-button { width: 100%; }
 }
+
+/* ---------- Contact inbox & newsletter list ---------- */
+.admin-note {
+  margin-bottom: 18px;
+  padding: 11px 14px;
+  border: 1px solid #c7d2fe;
+  border-radius: var(--r-sm);
+  background: var(--indigo-soft);
+  color: var(--indigo-deep);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-message-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 360px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  line-height: 1.45;
+}

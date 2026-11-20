@@ -27,20 +27,34 @@ const navLinks = [
 
 const footerColumns = [
   {
-    title: 'Popular Categories',
-    links: ['Mobile', 'Watch', 'Camera', 'Accessories', 'Speaker'],
+    title: 'Shop by category',
+    links: [
+      { label: 'Mobile', to: '/shop?category=smartphones' },
+      { label: 'Watch', to: '/shop?category=smart-watches' },
+      { label: 'Camera', to: '/shop?category=cameras' },
+      { label: 'Accessories', to: '/shop?category=accessories' },
+      { label: 'Speaker', to: '/shop?category=speakers' },
+    ],
   },
   {
-    title: 'Let us help you',
-    links: ['My account', 'My order', 'Shipping policy', 'Help centre', 'FAQs'],
+    title: 'Help & support',
+    links: [
+      { label: 'My account', to: '/account' },
+      { label: 'My order', to: '/orders' },
+      { label: 'Shipping policy', to: '/shipping-policy' },
+      { label: 'Help centre', to: '/help-centre' },
+      { label: 'FAQs', to: '/faqs' },
+    ],
   },
   {
-    title: 'Resources',
-    links: ['Blog', 'Newsletter', 'Support', 'Reviews'],
-  },
-  {
-    title: 'Get to know us',
-    links: ['About us', 'Contact', 'Login / Register', 'Terms & conditions', 'Privacy policy'],
+    title: 'Sookshop',
+    links: [
+      { label: 'About us', to: '/about' },
+      { label: 'Contact', to: '/contact' },
+      { label: 'Get 20% off', to: '/#newsletter' },
+      { label: 'Terms & conditions', to: '/terms' },
+      { label: 'Privacy policy', to: '/privacy' },
+    ],
   },
 ];
 
@@ -75,14 +89,6 @@ export default function StoreLayout() {
     setUser(null);
     setDrawerOpen(false);
     navigate('/');
-  };
-
-  const footerHref = (label) => {
-    if (label === 'Contact') return '/contact';
-    if (label === 'My account') return user ? '/account' : '/login';
-    if (label === 'Login / Register') return '/login';
-    if (label === 'My order') return '/orders';
-    return '/shop';
   };
 
   useEffect(() => {
@@ -337,9 +343,9 @@ export default function StoreLayout() {
               <div className="footer-col" key={column.title}>
                 <h4>{column.title}</h4>
                 <ul>
-                  {column.links.map((label) => (
-                    <li key={label}>
-                      <Link to={footerHref(label)}>{label}</Link>
+                  {column.links.map((link) => (
+                    <li key={link.label}>
+                      <Link to={link.to}>{link.label}</Link>
                     </li>
                   ))}
                 </ul>

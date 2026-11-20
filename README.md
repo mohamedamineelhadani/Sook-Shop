@@ -12,7 +12,7 @@ sookshop/
 │       ├── app.js            Express app, CORS, middleware, routes
 │       ├── server.js         DB connection + server startup
 │       ├── config/           env + MongoDB connection
-│       ├── models/           Category, Product, User, Cart, Order, Review
+│       ├── models/           Category, Product, User, Cart, Order, Review, ContactMessage, NewsletterSubscriber
 │       ├── routes/           feature routes (added step by step)
 │       ├── middleware/       async wrapper, 404, error handler
 │       └── utils/            AppError
@@ -20,16 +20,16 @@ sookshop/
 │   └── src/
 │       ├── components/       shared UI (icons, product cards, reviews)
 │       ├── layouts/          StoreLayout (header, nav, drawer, footer)
-│       ├── api/              API clients (cart, wishlist, orders, reviews)
+│       ├── api/              API clients (cart, wishlist, orders, reviews, contact, newsletter)
 │       ├── context/          Auth, Cart & Wishlist providers
-│       ├── pages/            Home, Shop, Product, Cart, Checkout, Orders, Wishlist, …
+│       ├── pages/            Home, Shop, Product, Cart, Checkout, Orders, Contact, info pages, …
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/store.css  converted template design system
 ├── admin/             Admin panel — Vite + React (port 5174)
 │   └── src/
 │       ├── layouts/          AdminLayout (sidebar + topbar)
-│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Reviews, Users
-│       ├── api/              API clients (catalog, auth, dashboard, insights, orders, reviews)
+│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Reviews, Users, Messages, Newsletter
+│       ├── api/              API clients (catalog, auth, dashboard, insights, orders, reviews, contact, newsletter)
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/admin.css  admin design system
 └── template to start/ Original Sprylo HTML/CSS/JS template (design reference)
@@ -184,6 +184,48 @@ Responsive updates: the storefront header keeps search available on mobile (it m
 row below the logo/icons), and admin toolbars, dashboard panels and tables wrap or scroll cleanly
 on small screens.
 
+### Contact, footer pages & newsletter (Step 8)
+
+The storefront now has a real contact flow and every remaining footer link opens a real page.
+No emails are sent by this demo — submissions are only saved in MongoDB and shown in the admin
+panel.
+
+**Public endpoints**
+
+- `POST /api/contact` — body: `{ name, email, subject?, message }`; saves a support message
+- `POST /api/newsletter/subscribe` — body: `{ email, source? }`; saves an email, reactivates an
+  existing inactive subscriber, and returns `alreadySubscribed: true` when it was already active
+- `POST /api/newsletter/unsubscribe` — body: `{ email }`; marks a subscriber inactive (always
+  returns the same response so it cannot be used to check who subscribed)
+
+**Admin endpoints** (admin role only)
+
+- `GET /api/admin/contact-messages` — inbox list with `page`/`limit`, `isRead` and `q` filters,
+  plus total/unread/read stats
+- `PATCH /api/admin/contact-messages/:id/read` — body: `{ isRead }`
+- `DELETE /api/admin/contact-messages/:id`
+- `GET /api/admin/newsletter` — subscriber list with `page`/`limit`, `isActive` and `q` filters,
+  plus total/active/inactive stats
+- `DELETE /api/admin/newsletter/:id`
+
+**Storefront pages**
+
+- `/contact` — validated form with order/COD help links and saved-message feedback
+- `/about`, `/shipping-policy`, `/help-centre`, `/faqs`, `/terms`, `/privacy` — real content pages;
+  `NotFoundPage` remains for unknown URLs
+- The footer now uses explicit link objects: category links open filtered shop pages, help and
+  company links open the pages above, and **Get 20% off** jumps to `#newsletter` on the home page
+- The home newsletter form calls the subscribe API and shows saved/already-subscribed/error states
+
+**Admin pages**
+
+- **Messages** (`/messages`) — contact inbox with search, read/unread filters, mark read/unread and
+  delete
+- **Newsletter** (`/newsletter`) — captured emails with search, status filters and delete
+
+The **20% discount copy is intentionally just store copy**: there is no coupon code and no email
+delivery in this step. Emails and messages remain visible only to logged-in admins.
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -207,6 +249,8 @@ Every feature is built across all three apps in the same step.
   with visibility controls and stats.
 - [x] **Step 7 — Polish**: idempotent demo seed, one-request admin dashboard with charts and
   actionable lists, responsive storefront/admin layouts, and final lint/build/API verification.
+- [x] **Step 8 — Contact & footer**: real contact form + admin inbox, newsletter email capture +
+  admin list, all footer pages built and linked, Resources column removed. No emails are sent.
 
 ## Payment note
 

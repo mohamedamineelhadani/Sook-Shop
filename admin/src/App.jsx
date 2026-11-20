@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom';
 
 import RequireAdmin from './components/RequireAdmin.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
+import AdminContactPage from './pages/AdminContactPage.jsx';
+import AdminNewsletterPage from './pages/AdminNewsletterPage.jsx';
 import AdminReviewsPage from './pages/AdminReviewsPage.jsx';
 import { DashboardPage, OrdersPage, UsersPage } from './pages/AdminPages.jsx';
 import AdminLoginPage from './pages/AdminLoginPage.jsx';
@@ -27,6 +29,8 @@ export default function App() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="messages" element={<AdminContactPage />} />
+        <Route path="newsletter" element={<AdminNewsletterPage />} />
         <Route path="*" element={<DashboardPage />} />
       </Route>
     </Routes>

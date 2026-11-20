@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { getCategories, getProducts } from '../api/catalog.js';
+import { subscribeNewsletter } from '../api/newsletter.js';
 import ProductCard from '../components/ProductCard.jsx';
 import { EmptyState, ErrorState, LoadingState } from '../components/States.jsx';
 import { useCart } from '../hooks/useCart.js';
@@ -76,6 +77,9 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterState, setNewsletterState] = useState('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -108,6 +112,32 @@ export default function HomePage() {
       alive = false;
     };
   }, [activeTab]);
+
+  useEffect(() => {
+    if (window.location.hash !== '#newsletter') return;
+    window.requestAnimationFrame(() => {
+      document.getElementById('newsletter')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  }, []);
+
+  const subscribe = async (event) => {
+    event.preventDefault();
+    setNewsletterState('sending');
+    setNewsletterMessage('');
+    try {
+      const result = await subscribeNewsletter(newsletterEmail, 'home');
+      setNewsletterState('done');
+      setNewsletterEmail('');
+      setNewsletterMessage(
+        result.alreadySubscribed
+          ? 'You are already on the list — thanks for checking!'
+          : 'Saved! Your email is now in our store list.',
+      );
+    } catch (err) {
+      setNewsletterState('error');
+      setNewsletterMessage(err.message);
+    }
+  };
 
   const quickAdd = (product) => {
     addItem(product, 1);
@@ -338,7 +368,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section style={{ background: 'var(--paper)' }}>
+      <section id="newsletter" style={{ background: 'var(--paper)' }}>
         <div className="container">
           <div className="newsletter">
             <div className="newsletter-grid">
@@ -347,23 +377,34 @@ export default function HomePage() {
                   Get <strong>20% Off</strong> your first order — straight to your inbox.
                 </h2>
                 <p>
-                  Drop your email and we'll send a one-time discount, plus first-look offers on
-                  the gear we just got in. Unsubscribe anytime.
+                  Drop your email and we'll save it in our store list, with first-look offers on
+                  the gear we just got in. No emails are sent from this demo store.
                 </p>
               </div>
-              <form
-                className="newsletter-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  event.currentTarget.querySelector('button').textContent = 'Sent ✓';
-                  event.currentTarget.reset();
-                }}
-              >
-                <input type="email" required placeholder="Enter your email" aria-label="Email address" />
-                <button className="btn" type="submit">
-                  Subscribe →
-                </button>
-              </form>
+              <div>
+                <form className="newsletter-form" onSubmit={subscribe}>
+                  <input
+                    type="email"
+                    required
+                    value={newsletterEmail}
+                    onChange={(event) => setNewsletterEmail(event.target.value)}
+                    placeholder="Enter your email"
+                    aria-label="Email address"
+                  />
+                  <button className="btn" type="submit" disabled={newsletterState === 'sending'}>
+                    {newsletterState === 'sending'
+                      ? 'Saving…'
+                      : newsletterState === 'done'
+                        ? 'Saved ✓'
+                        : 'Subscribe →'}
+                  </button>
+                </form>
+                {newsletterMessage && (
+                  <p className={`newsletter-status is-${newsletterState}`} role="status" aria-live="polite">
+                    {newsletterMessage}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

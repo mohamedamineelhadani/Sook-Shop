@@ -4,9 +4,11 @@ import {
   Heart,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   Package,
   Search,
+  Send,
   ShoppingCart,
   Star,
   Store,
@@ -28,6 +30,8 @@ const menu = [
   { to: '/orders', label: 'Orders', icon: ShoppingCart },
   { to: '/reviews', label: 'Reviews', icon: Star },
   { to: '/users', label: 'Customers', icon: Users },
+  { to: '/messages', label: 'Messages', icon: Mail },
+  { to: '/newsletter', label: 'Newsletter', icon: Send },
 ];
 
 export default function AdminLayout() {
