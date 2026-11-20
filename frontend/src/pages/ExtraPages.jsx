@@ -1,19 +1,5 @@
 import PlaceholderPage from '../components/PlaceholderPage.jsx';
 
-export function WishlistPage() {
-  return (
-    <PlaceholderPage
-      title="Wishlist"
-      subtitle="Saved products arrive with the Wishlist step."
-      steps={[
-        'Add wishlist endpoints to the API',
-        'Wire the heart buttons in the product cards',
-        'Show saved items with quick add-to-cart',
-      ]}
-    />
-  );
-}
-
 export function OrdersPage() {
   return (
     <PlaceholderPage

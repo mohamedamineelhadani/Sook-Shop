@@ -5,6 +5,7 @@ import { getProduct } from '../api/catalog.js';
 import ProductCard from '../components/ProductCard.jsx';
 import { ErrorState, LoadingState } from '../components/States.jsx';
 import { useCart } from '../hooks/useCart.js';
+import { useWishlist } from '../hooks/useWishlist.js';
 import { colorToHex, formatPrice, formatStars, imageUrl } from '../lib/format.js';
 
 export default function ProductPage() {
@@ -21,7 +22,7 @@ export default function ProductPage() {
   const [color, setColor] = useState('');
   const [size, setSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [wished, setWished] = useState(false);
+  const { has, toggle } = useWishlist();
 
   useEffect(() => {
     let alive = true;
@@ -60,8 +61,10 @@ export default function ProductPage() {
     ? Math.round((1 - product.price / product.compareAtPrice) * 100)
     : 0;
 
+  const wished = has(product?._id);
+
   const handleAdd = () => {
-    addItem(product, quantity);
+    addItem(product, quantity, { color, size });
     navigate('/cart');
   };
 
@@ -213,8 +216,9 @@ export default function ProductPage() {
               <button
                 className="icon-btn"
                 style={{ background: 'var(--bg)' }}
-                aria-label="Add to wishlist"
-                onClick={() => setWished((current) => !current)}
+                aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+                title={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+                onClick={() => toggle(product)}
               >
                 {wished ? '♥' : '♡'}
               </button>

@@ -14,9 +14,7 @@ import { logout } from '../api/auth.js';
 import { APP_NAME } from '../config.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useCart } from '../hooks/useCart.js';
-
-// Wishlist becomes real state in the Wishlist step.
-const WISHLIST_COUNT = 0;
+import { useWishlist } from '../hooks/useWishlist.js';
 
 const navLinks = [
   { to: '/', label: 'Home', end: true },
@@ -57,6 +55,7 @@ export default function StoreLayout() {
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
   const { count: cartCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
   const [query, setQuery] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -145,7 +144,7 @@ export default function StoreLayout() {
             </Link>
             <Link to="/wishlist" className="icon-btn" aria-label="Wishlist">
               <HeartIcon />
-              {WISHLIST_COUNT > 0 && <span className="count">{WISHLIST_COUNT}</span>}
+              {wishlistCount > 0 && <span className="count">{wishlistCount}</span>}
             </Link>
             <Link to="/cart" className="icon-btn icon-btn--cart" aria-label="Cart">
               <CartIcon />

@@ -815,3 +815,89 @@ button.admin-nav-link {
 }
 .admin-login-hint strong { color: var(--ink-soft); }
 .admin-login-hint code { font-family: var(--ff-mono); color: var(--indigo); }
+
+/* ---------- Step 4: cart & wishlist insights ---------- */
+.admin-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.admin-insight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.admin-insight-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.admin-insight-head h3 svg { color: var(--indigo); }
+.admin-insight-head > span {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+.admin-insight-preview {
+  display: flex;
+  gap: 5px;
+  margin-top: 7px;
+}
+.admin-insight-preview img {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  object-fit: cover;
+  background: var(--bg-soft);
+}
+.admin-popular { margin-top: 18px; }
+.admin-popular-list { padding: 6px 0; }
+.admin-popular-row {
+  display: grid;
+  grid-template-columns: 26px 42px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+}
+.admin-popular-row + .admin-popular-row { border-top: 1px solid var(--rule); }
+.admin-popular-rank {
+  font-family: var(--ff-mono);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.admin-popular-row img {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  border: 1px solid var(--rule);
+  object-fit: cover;
+  background: var(--bg-soft);
+}
+.admin-popular-name { display: grid; min-width: 0; }
+.admin-popular-name strong {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-popular-name span { font-size: 11px; color: var(--ink-mute); }
+
+@media (max-width: 900px) {
+  .admin-insight-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .admin-popular-row {
+    grid-template-columns: 22px 38px minmax(0, 1fr);
+    row-gap: 6px;
+  }
+  .admin-popular-row .admin-badge { grid-column: 3; justify-self: start; }
+}

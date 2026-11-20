@@ -20,13 +20,16 @@ sookshop/
 │   └── src/
 │       ├── components/       shared UI (icons, placeholders)
 │       ├── layouts/          StoreLayout (header, nav, drawer, footer)
-│       ├── pages/            Home, Shop, Product, Cart, Contact, …
+│       ├── api/              API clients (cart, wishlist)
+│       ├── context/          Auth, Cart & Wishlist providers
+│       ├── pages/            Home, Shop, Product, Cart, Wishlist, Contact, …
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/store.css  converted template design system
 ├── admin/             Admin panel — Vite + React (port 5174)
 │   └── src/
 │       ├── layouts/          AdminLayout (sidebar + topbar)
-│       ├── pages/            Dashboard, Products, Categories, Orders, Users
+│       ├── pages/            Dashboard, Products, Categories, Insights, Orders, Users
+│       ├── api/              API clients (catalog, auth, insights)
 │       ├── lib/api.js        Axios client for the backend
 │       └── styles/admin.css  admin design system
 └── template to start/ Original Sprylo HTML/CSS/JS template (design reference)
@@ -76,6 +79,31 @@ delete products and categories. Create/reset the first admin with:
 cd backend && npm run seed:admin
 ```
 
+### Cart & wishlist (Step 4)
+
+All cart and wishlist endpoints require login. Guests can still add items locally; when they
+sign in, their guest cart and wishlist are synced to the account once (quantities merge and
+invalid/out-of-stock products are dropped).
+
+**Cart** — items are keyed by `productId::color::size`.
+
+- `GET /api/cart` — current cart with `items`, `count`, `subtotal`
+- `POST /api/cart/items` — body: `{ productId, quantity?, color?, size? }`
+- `PATCH /api/cart/items` — same identifier plus the new `quantity`
+- `DELETE /api/cart/items` — body: `{ productId, color?, size? }`
+- `POST /api/cart/sync` — body: `{ items: [{ productId, quantity, color?, size? }] }`
+- `DELETE /api/cart` — clear the cart
+
+**Wishlist**
+
+- `GET /api/wishlist` — saved products
+- `POST /api/wishlist/:productId` / `DELETE /api/wishlist/:productId` — save/remove
+- `POST /api/wishlist/sync` — body: `{ productIds: [] }`
+
+**Admin insight** (admin role only): `GET /api/admin/insights` returns cart/wishlist stats,
+the 20 most recently updated carts, customer wishlists, and a popularity ranking. The admin
+panel shows this on the **Insights** page and on the dashboard cards.
+
 ## Step-by-step roadmap
 
 Every feature is built across all three apps in the same step.
@@ -89,8 +117,8 @@ Every feature is built across all three apps in the same step.
   `protect`/`authorize('admin')` on all catalog write routes → storefront login/register/account
   with protected routes → admin login with protected panel. Seed the first admin with
   `npm run seed:admin` in `backend/` (default `admin@sookshop.com` / `Admin@123`).
-- [ ] **Step 4 — Cart & Wishlist**: cart API + React cart context → storefront cart and
-  wishlist → admin read-only insight.
+- [x] **Step 4 — Cart & Wishlist**: cart/wishlist API with guest sync → storefront cart and
+  wishlist with working heart buttons and counts → admin read-only insights page.
 - [ ] **Step 5 — Orders (COD checkout)**: order API with shipping details and COD status →
   storefront checkout/confirmation → admin order management.
 - [ ] **Step 6 — Search, filters & reviews**: API-side search/filter → storefront shop

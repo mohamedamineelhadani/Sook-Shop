@@ -6,10 +6,11 @@ import AccountPage from './pages/AccountPage.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import CartPage from './pages/CartPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
-import { NotFoundPage, OrdersPage, WishlistPage } from './pages/ExtraPages.jsx';
+import { NotFoundPage, OrdersPage } from './pages/ExtraPages.jsx';
 import HomePage from './pages/HomePage.jsx';
 import ProductPage from './pages/ProductPage.jsx';
 import ShopPage from './pages/ShopPage.jsx';
+import WishlistPage from './pages/WishlistPage.jsx';
 
 export default function App() {
   return (

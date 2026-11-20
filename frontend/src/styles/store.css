@@ -1643,3 +1643,18 @@ input, select, textarea { font: inherit; color: inherit; }
 @media (max-width: 760px) {
   .auth-layout, .account-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Step 4: wishlist & synced cart ---------- */
+.wishlist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s4);
+  margin-bottom: var(--s5);
+  font-family: var(--ff-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-mute);
+}
+.cart-row .qty button:disabled { opacity: 0.35; cursor: not-allowed; }

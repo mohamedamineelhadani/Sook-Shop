@@ -1,20 +1,28 @@
 import { useEffect, useState } from 'react';
 import { Package, ShoppingCart, Tags, Users } from 'lucide-react';
 
+import { getCartInsights } from '../api/insights.js';
 import { getCategories, getProducts } from '../api/catalog.js';
 import AdminPlaceholder from '../components/AdminPlaceholder.jsx';
 
 export function DashboardPage() {
-  const [counts, setCounts] = useState({ products: 0, categories: 0 });
+  const [counts, setCounts] = useState({
+    products: 0,
+    categories: 0,
+    carts: 0,
+    customers: 0,
+  });
 
   useEffect(() => {
     let alive = true;
-    Promise.all([getProducts({ limit: 1 }), getCategories()])
-      .then(([products, categories]) => {
+    Promise.all([getProducts({ limit: 1 }), getCategories(), getCartInsights()])
+      .then(([products, categories, insights]) => {
         if (!alive) return;
         setCounts({
           products: products.pagination?.total || 0,
           categories: categories.data.length,
+          carts: insights.stats.carts,
+          customers: insights.stats.customers,
         });
       })
       .catch(() => {});
@@ -26,8 +34,8 @@ export function DashboardPage() {
   const stats = [
     { label: 'Products', value: counts.products, icon: Package, tone: 'amber' },
     { label: 'Categories', value: counts.categories, icon: Tags, tone: 'indigo' },
-    { label: 'Orders (COD)', value: 0, icon: ShoppingCart, tone: 'green' },
-    { label: 'Customers', value: 0, icon: Users, tone: 'purple' },
+    { label: 'Active carts', value: counts.carts, icon: ShoppingCart, tone: 'green' },
+    { label: 'Customers', value: counts.customers, icon: Users, tone: 'purple' },
   ];
 
   return (

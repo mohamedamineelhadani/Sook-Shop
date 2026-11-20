@@ -1,8 +1,11 @@
 import { Router } from 'express';
 
+import adminRoutes from './admin.routes.js';
 import authRoutes from './auth.routes.js';
+import cartRoutes from './cart.routes.js';
 import categoryRoutes from './category.routes.js';
 import productRoutes from './product.routes.js';
+import wishlistRoutes from './wishlist.routes.js';
 
 const router = Router();
 
@@ -27,15 +30,19 @@ router.get('/', (req, res) => {
       brands: 'GET /api/products/brands',
       categories: '/api/categories',
       auth: '/api/auth',
-      // Added in later steps:
-      // cart:  '/api/cart'
-      // orders:'/api/orders'
-      // users: '/api/users'
+      cart: '/api/cart',
+      wishlist: '/api/wishlist',
+      adminInsights: 'GET /api/admin/insights (admin only)',
+      // Added in a later step:
+      // orders: '/api/orders'
     },
   });
 });
 
 router.use('/auth', authRoutes);
+router.use('/cart', cartRoutes);
+router.use('/wishlist', wishlistRoutes);
+router.use('/admin', adminRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/products', productRoutes);
 

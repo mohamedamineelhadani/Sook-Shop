@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Bell,
+  Heart,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -22,6 +23,7 @@ const menu = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/products', label: 'Products', icon: Package },
   { to: '/categories', label: 'Categories', icon: Tags },
+  { to: '/insights', label: 'Insights', icon: Heart },
   { to: '/orders', label: 'Orders', icon: ShoppingCart },
   { to: '/users', label: 'Customers', icon: Users },
 ];

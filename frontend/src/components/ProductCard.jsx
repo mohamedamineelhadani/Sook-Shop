@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useCart } from '../hooks/useCart.js';
+import { useWishlist } from '../hooks/useWishlist.js';
 import { formatPrice, formatStars, imageUrl } from '../lib/format.js';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
+  const { has, toggle } = useWishlist();
   const [added, setAdded] = useState(false);
-  const [wished, setWished] = useState(false);
 
   const onSale = Number(product.compareAtPrice) > 0;
   const inStock = Number(product.stock) > 0;
+  const wished = has(product._id);
 
   const handleAdd = () => {
     addItem(product, 1);
@@ -28,8 +30,9 @@ export default function ProductCard({ product }) {
         ) : null}
         <button
           className={`wishlist${wished ? ' is-active' : ''}`}
-          aria-label="Add to wishlist"
-          onClick={() => setWished((current) => !current)}
+          aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+          title={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+          onClick={() => toggle(product)}
         >
           {wished ? '♥' : '♡'}
         </button>
