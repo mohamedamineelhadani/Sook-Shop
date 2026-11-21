@@ -27,6 +27,7 @@ const userSchema = new Schema(
     wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date, default: null },
+    notificationReads: { type: Schema.Types.Mixed, default: () => ({}) },
   },
   { timestamps: true },
 );

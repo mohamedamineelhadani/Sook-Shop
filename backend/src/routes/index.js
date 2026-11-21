@@ -39,6 +39,7 @@ router.get('/', (req, res) => {
       adminInsights: 'GET /api/admin/insights (admin only)',
       adminSearch: 'GET /api/admin/search?q=… (admin only)',
       adminNotifications: 'GET /api/admin/notifications (admin only)',
+      adminNotificationRead: 'PATCH /api/admin/notifications/:id/read (admin only)',
       adminProfile: '/api/admin/profile (admin only)',
       adminCustomers: '/api/admin/customers (admin only)',
       orders: '/api/orders',

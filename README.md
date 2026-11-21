@@ -239,7 +239,10 @@ orders and customers, a notification bell generated from real store data, and an
 - `PATCH /api/admin/customers/:id/active` — body: `{ isActive }`; deactivated customers cannot sign in
 - `GET /api/admin/search?q=…` — grouped product/order/customer results (minimum 2 characters)
 - `GET /api/admin/notifications` — live alerts and counts from unread messages, pending orders,
-  low stock, hidden reviews, new subscribers and new customers
+  low stock, hidden reviews, new subscribers and new customers, minus the counts this admin has
+  already opened
+- `PATCH /api/admin/notifications/:id/read` — marks one alert as read for this admin; valid ids are
+  `messages`, `orders`, `stock`, `reviews`, `newsletter` and `customers`
 - `GET /api/admin/profile` — current admin account
 - `PATCH /api/admin/profile` — body: `{ name, email, phone? }`
 - `PATCH /api/admin/profile/password` — body:
@@ -250,8 +253,8 @@ orders and customers, a notification bell generated from real store data, and an
 - **Customers** (`/users`) — searchable/filterable table, customer metrics and a detail modal with
   recent orders/reviews plus an account-status toggle
 - **Global search** — 280 ms debounced popover in the topbar; Enter opens the first result
-- **Notifications** (`/notifications`) — full alert list and summary cards; the bell badge is the
-  total actionable count and refreshes when opened
+- **Notifications** (`/notifications`) — full alert list and summary cards; clicking an alert marks
+  it read, lowers the bell badge/card count immediately, and keeps that state after refresh
 - **Profile** (`/profile`, `/profile?tab=password`) — edit admin details or change the password
 
 Notification items deep-link with query params that the target pages understand:

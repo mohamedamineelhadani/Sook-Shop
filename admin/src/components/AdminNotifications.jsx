@@ -8,10 +8,17 @@ import {
   Star,
   Users,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-import { getAdminNotifications } from '../api/notifications.js';
+import {
+  getAdminNotifications,
+  markAdminNotificationRead,
+} from '../api/notifications.js';
 import { formatDate } from '../lib/format.js';
+import {
+  publishNotificationUpdate,
+  subscribeNotificationUpdates,
+} from '../lib/notificationEvents.js';
 
 const icons = {
   mail: Mail,
@@ -26,8 +33,10 @@ const emptyData = { notifications: [], unread: 0, summary: {} };
 
 export default function AdminNotifications() {
   const wrapRef = useRef(null);
+  const navigate = useNavigate();
   const [data, setData] = useState(emptyData);
   const [open, setOpen] = useState(false);
+  const [markingId, setMarkingId] = useState('');
 
   const load = useCallback(() => {
     getAdminNotifications()
@@ -38,6 +47,8 @@ export default function AdminNotifications() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => subscribeNotificationUpdates(setData), []);
 
   useEffect(() => {
     const closeOnOutside = (event) => {
@@ -58,6 +69,25 @@ export default function AdminNotifications() {
     const next = !open;
     setOpen(next);
     if (next) load();
+  };
+
+  const handleNotificationClick = async (event, item) => {
+    event.preventDefault();
+    setOpen(false);
+    if (markingId) return;
+
+    setMarkingId(item.id);
+    try {
+      const result = await markAdminNotificationRead(item.id);
+      setData(result);
+      publishNotificationUpdate(result);
+      navigate(item.to);
+    } catch {
+      load();
+      navigate(item.to);
+    } finally {
+      setMarkingId('');
+    }
   };
 
   return (
@@ -88,7 +118,8 @@ export default function AdminNotifications() {
                     key={item.id}
                     to={item.to}
                     className="admin-notification-item"
-                    onClick={() => setOpen(false)}
+                    aria-disabled={markingId === item.id}
+                    onClick={(event) => handleNotificationClick(event, item)}
                   >
                     <span className={`admin-notification-icon tone-${item.tone}`}>
                       <Icon size={15} />

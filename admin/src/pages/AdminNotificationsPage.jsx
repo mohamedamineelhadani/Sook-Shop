@@ -9,10 +9,17 @@ import {
   Star,
   Users,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-import { getAdminNotifications } from '../api/notifications.js';
+import {
+  getAdminNotifications,
+  markAdminNotificationRead,
+} from '../api/notifications.js';
 import { formatDate } from '../lib/format.js';
+import {
+  publishNotificationUpdate,
+  subscribeNotificationUpdates,
+} from '../lib/notificationEvents.js';
 
 const icons = {
   mail: Mail,
@@ -26,10 +33,12 @@ const icons = {
 const emptyData = { notifications: [], unread: 0, summary: {} };
 
 export default function AdminNotificationsPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState(emptyData);
   const [refreshKey, setRefreshKey] = useState(0);
   const [loadedKey, setLoadedKey] = useState(null);
   const [error, setError] = useState('');
+  const [markingId, setMarkingId] = useState('');
 
   const loading = loadedKey !== refreshKey;
 
@@ -52,6 +61,26 @@ export default function AdminNotificationsPage() {
     };
   }, [refreshKey]);
 
+  useEffect(() => subscribeNotificationUpdates(setData), []);
+
+  const handleNotificationClick = async (event, item) => {
+    event.preventDefault();
+    if (markingId) return;
+
+    setMarkingId(item.id);
+    try {
+      const result = await markAdminNotificationRead(item.id);
+      setData(result);
+      setError('');
+      publishNotificationUpdate(result);
+      navigate(item.to);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setMarkingId('');
+    }
+  };
+
   const summary = data.summary || {};
 
   const cards = [
@@ -66,7 +95,7 @@ export default function AdminNotificationsPage() {
       <div className="admin-page-head">
         <div>
           <h2>Notifications</h2>
-          <p>Actionable alerts generated from live store data.</p>
+          <p>Actionable alerts generated from live store data. Opening one marks it read.</p>
         </div>
         <button
           className="admin-button admin-button--ghost"
@@ -100,7 +129,13 @@ export default function AdminNotificationsPage() {
           data.notifications.map((item) => {
             const Icon = icons[item.icon] || Bell;
             return (
-              <Link key={item.id} to={item.to} className="admin-notification-row">
+              <Link
+                key={item.id}
+                to={item.to}
+                className="admin-notification-row"
+                aria-disabled={markingId === item.id}
+                onClick={(event) => handleNotificationClick(event, item)}
+              >
                 <span className={`admin-notification-icon tone-${item.tone}`}>
                   <Icon size={18} />
                 </span>

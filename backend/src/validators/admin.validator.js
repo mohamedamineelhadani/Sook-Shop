@@ -1,7 +1,13 @@
 import { body, param } from 'express-validator';
 
+import { ADMIN_NOTIFICATION_IDS } from '../constants/notifications.js';
+
 export const adminUserIdValidator = [
   param('id').isMongoId().withMessage('Invalid user id'),
+];
+
+export const notificationIdValidator = [
+  param('id').isIn(ADMIN_NOTIFICATION_IDS).withMessage('Invalid notification id'),
 ];
 
 export const customerActiveValidator = [

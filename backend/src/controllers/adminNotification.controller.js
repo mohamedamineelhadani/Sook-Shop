@@ -1,9 +1,11 @@
+import { ADMIN_NOTIFICATION_IDS } from '../constants/notifications.js';
 import { ContactMessage } from '../models/ContactMessage.js';
 import { NewsletterSubscriber } from '../models/NewsletterSubscriber.js';
 import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
 import { Review } from '../models/Review.js';
 import { User } from '../models/User.js';
+import { AppError } from '../utils/AppError.js';
 
 function daysAgo(days) {
   const date = new Date();
@@ -11,7 +13,22 @@ function daysAgo(days) {
   return date;
 }
 
-export async function getAdminNotifications(req, res) {
+function normalizeReads(reads) {
+  if (!reads || typeof reads !== 'object' || Array.isArray(reads)) return {};
+  return reads;
+}
+
+function markedCount(reads, id) {
+  const marker = normalizeReads(reads)[id];
+  const count = Number(marker?.count ?? marker ?? 0);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+}
+
+function remainingCount(rawCount, reads, id) {
+  return Math.max(0, (Number(rawCount) || 0) - markedCount(reads, id));
+}
+
+async function getRawNotificationData() {
   const weekAgo = daysAgo(7);
 
   const [
@@ -19,6 +36,7 @@ export async function getAdminNotifications(req, res) {
     latestMessage,
     pendingOrders,
     latestOrder,
+    lowStockCount,
     lowStock,
     hiddenReviews,
     latestReview,
@@ -33,6 +51,7 @@ export async function getAdminNotifications(req, res) {
       .sort({ placedAt: -1 })
       .limit(2)
       .lean(),
+    Product.countDocuments({ isActive: true, stock: { $lte: 10 } }),
     Product.find({ isActive: true, stock: { $lte: 10 } })
       .select('name stock price')
       .sort({ stock: 1 })
@@ -44,39 +63,66 @@ export async function getAdminNotifications(req, res) {
     User.countDocuments({ role: 'customer', createdAt: { $gte: weekAgo } }),
   ]);
 
-  const lowStockCount = await Product.countDocuments({ isActive: true, stock: { $lte: 10 } });
+  return {
+    counts: {
+      messages: unreadMessages,
+      orders: pendingOrders,
+      stock: lowStockCount,
+      reviews: hiddenReviews,
+      newsletter: newSubscribers,
+      customers: newCustomers,
+    },
+    samples: {
+      messages: latestMessage,
+      orders: latestOrder,
+      stock: lowStock,
+      reviews: latestReview,
+    },
+  };
+}
+
+function buildNotificationPayload(rawData, reads) {
+  const { counts, samples } = rawData;
+
+  const unreadMessages = remainingCount(counts.messages, reads, 'messages');
+  const pendingOrders = remainingCount(counts.orders, reads, 'orders');
+  const lowStockCount = remainingCount(counts.stock, reads, 'stock');
+  const hiddenReviews = remainingCount(counts.reviews, reads, 'reviews');
+  const newSubscribers = remainingCount(counts.newsletter, reads, 'newsletter');
+  const newCustomers = remainingCount(counts.customers, reads, 'customers');
+
   const notifications = [];
 
   if (unreadMessages) {
-    const names = latestMessage.map((item) => item.subject).join(', ');
+    const names = samples.messages.map((item) => item.subject).join(', ');
     notifications.push({
       id: 'messages',
       icon: 'mail',
       tone: 'indigo',
       title: `${unreadMessages} unread support message${unreadMessages === 1 ? '' : 's'}`,
       message: names ? `Latest: ${names}` : 'Open the inbox to read new messages.',
-      time: latestMessage[0]?.createdAt || null,
+      time: samples.messages[0]?.createdAt || null,
       count: unreadMessages,
       to: '/messages',
     });
   }
 
   if (pendingOrders) {
-    const names = latestOrder.map((item) => item.orderNumber).filter(Boolean).join(', ');
+    const names = samples.orders.map((item) => item.orderNumber).filter(Boolean).join(', ');
     notifications.push({
       id: 'orders',
       icon: 'cart',
       tone: 'amber',
       title: `${pendingOrders} order${pendingOrders === 1 ? '' : 's'} need attention`,
       message: names ? `Waiting: ${names}` : 'Review orders waiting to be processed.',
-      time: latestOrder[0]?.placedAt || null,
+      time: samples.orders[0]?.placedAt || null,
       count: pendingOrders,
       to: '/orders?status=pending',
     });
   }
 
   if (lowStockCount) {
-    const names = lowStock.map((item) => item.name).join(', ');
+    const names = samples.stock.map((item) => item.name).join(', ');
     notifications.push({
       id: 'stock',
       icon: 'alert',
@@ -95,10 +141,10 @@ export async function getAdminNotifications(req, res) {
       icon: 'star',
       tone: 'amber',
       title: `${hiddenReviews} hidden review${hiddenReviews === 1 ? '' : 's'}`,
-      message: latestReview?.body
-        ? `“${latestReview.body.slice(0, 80)}${latestReview.body.length > 80 ? '…' : ''}”`
+      message: samples.reviews?.body
+        ? `“${samples.reviews.body.slice(0, 80)}${samples.reviews.body.length > 80 ? '…' : ''}”`
         : 'Open reviews to moderate hidden feedback.',
-      time: latestReview?.createdAt || null,
+      time: samples.reviews?.createdAt || null,
       count: hiddenReviews,
       to: '/reviews?visibility=hidden',
     });
@@ -136,19 +182,49 @@ export async function getAdminNotifications(req, res) {
 
   const unread = notifications.reduce((sum, item) => sum + item.count, 0);
 
+  return {
+    notifications,
+    unread,
+    summary: {
+      unreadMessages,
+      pendingOrders,
+      lowStock: lowStockCount,
+      hiddenReviews,
+      newSubscribers,
+      newCustomers,
+    },
+  };
+}
+
+export async function getAdminNotifications(req, res) {
+  const rawData = await getRawNotificationData();
   res.json({
     success: true,
-    data: {
-      notifications,
-      unread,
-      summary: {
-        unreadMessages,
-        pendingOrders,
-        lowStock: lowStockCount,
-        hiddenReviews,
-        newSubscribers,
-        newCustomers,
-      },
-    },
+    data: buildNotificationPayload(rawData, req.user.notificationReads),
+  });
+}
+
+export async function markAdminNotificationRead(req, res) {
+  const { id } = req.params;
+  if (!ADMIN_NOTIFICATION_IDS.includes(id)) {
+    throw new AppError(422, 'Invalid notification id');
+  }
+
+  const rawData = await getRawNotificationData();
+  const reads = { ...normalizeReads(req.user.notificationReads) };
+
+  reads[id] = {
+    count: rawData.counts[id] || 0,
+    readAt: new Date().toISOString(),
+  };
+
+  req.user.notificationReads = reads;
+  req.user.markModified('notificationReads');
+  await req.user.save({ validateBeforeSave: false });
+
+  res.json({
+    success: true,
+    data: buildNotificationPayload(rawData, reads),
+    message: 'Notification marked as read',
   });
 }

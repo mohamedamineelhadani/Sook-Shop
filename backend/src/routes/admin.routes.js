@@ -6,7 +6,10 @@ import {
   listCustomers,
   setCustomerActive,
 } from '../controllers/adminCustomer.controller.js';
-import { getAdminNotifications } from '../controllers/adminNotification.controller.js';
+import {
+  getAdminNotifications,
+  markAdminNotificationRead,
+} from '../controllers/adminNotification.controller.js';
 import {
   changeAdminPassword,
   getAdminProfile,
@@ -39,6 +42,7 @@ import {
   adminUserIdValidator,
   changeAdminPasswordValidator,
   customerActiveValidator,
+  notificationIdValidator,
   updateAdminProfileValidator,
 } from '../validators/admin.validator.js';
 import {
@@ -62,6 +66,12 @@ router.use(protect, authorize('admin'));
 router.get('/dashboard', asyncHandler(getDashboard));
 router.get('/search', asyncHandler(globalSearch));
 router.get('/notifications', asyncHandler(getAdminNotifications));
+router.patch(
+  '/notifications/:id/read',
+  notificationIdValidator,
+  validate,
+  asyncHandler(markAdminNotificationRead),
+);
 router.get('/profile', asyncHandler(getAdminProfile));
 router.patch('/profile', updateAdminProfileValidator, validate, asyncHandler(updateAdminProfile));
 router.patch(
